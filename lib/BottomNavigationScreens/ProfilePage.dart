@@ -1,3 +1,9 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:budi/Helpers/AppIndicator.dart';
+import 'package:budi/Helpers/ToastMessage.dart';
+import 'package:budi/LoginManager/SharedPreferenceManager.dart';
+import 'package:budi/Models/UserInfoModel.dart';
 import 'package:budi/ProfilePageItems/BudiAppBalance.dart';
 import 'package:budi/ProfilePageItems/InviteFirends.dart';
 import 'package:budi/ProfilePageItems/MyReviews.dart';
@@ -8,6 +14,7 @@ import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
 import 'package:budi/Utilities/TextHelper.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -175,6 +182,9 @@ class _ProfilePageState extends State<ProfilePage> {
     else if (index == 14) {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => Settings()));
+    }
+    else if (index == 15) {
+      logOutPressed();
     }
     // else if (index == 2) {
     //   navigationPush(context, MeetingListPage(), function: (v) {});
@@ -347,5 +357,43 @@ class _ProfilePageState extends State<ProfilePage> {
             );
           }),
     );
+  }
+
+
+  logOutPressed() async {
+    try {
+      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      var token = sharedPreferences.getString('LogInToken');
+      var params = {"": ""};
+      AppIndicator.loadingIndicator();
+      final url =
+      Uri.parse('http://74.208.150.111/api/logout');
+      var request = http.MultipartRequest(
+          'POST', url)..fields.addAll(params);
+      request.headers.addAll({
+        'Authorization': 'Bearer ' + token!,
+        'Accept': 'application/json',
+        // 'Content-Type': 'multipart/form-data'
+      });
+      var response = await request.send();
+      final respStr = await response.stream.bytesToString();
+      var encoded = json.decode(respStr);
+      final int statusCode = url.port;
+      StatusMessage data = StatusMessage.fromJson(encoded);
+      if (response.statusCode == 200) {
+        StatusMessage? statusMessage;
+        AppIndicator.disposeIndicator();
+        statusMessage = data;
+        SharedPreferenceManager.deleteSavedDetails(context,data.message!);
+        setState(() {});
+      } else {
+        ToastMessage.message(data.message);
+        AppIndicator.disposeIndicator();
+        print(statusCode);
+      }
+    } catch (exception) {
+      AppIndicator.disposeIndicator();
+      print("Please Check Internet");
+    }
   }
 }

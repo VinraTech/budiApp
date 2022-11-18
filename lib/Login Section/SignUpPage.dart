@@ -1,14 +1,22 @@
+import 'dart:convert';
 import 'package:budi/BottomNavigation.dart';
 import 'package:budi/Common%20Fields/AppButton.dart';
 import 'package:budi/Common%20Fields/AppTextField.dart';
 import 'package:budi/Common%20Fields/SocialLoginButton.dart';
-import 'package:budi/Login%20Section/LoginPage.dart';
+import 'package:budi/Helpers/AppIndicator.dart';
+import 'package:budi/Helpers/ToastMessage.dart';
+import 'package:budi/LoginManager/SharedPreferenceManager.dart';
+import 'package:budi/Models/UserInfoModel.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 
 class SignUpPage extends StatefulWidget {
-  const SignUpPage({Key? key}) : super(key: key);
+  String? role;
+
+  SignUpPage({Key? key,this.role}) : super(key: key);
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -18,6 +26,8 @@ class _SignUpPageState extends State<SignUpPage> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController fullNameController = TextEditingController();
+  UserInfoModel? userInfoModel;
+
 
   @override
   Widget build(BuildContext context) {
@@ -67,9 +77,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 color: AppColor.BUTTON_COLOR,
                 label: 'Sign Up',
                 onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) =>BottomNavigation()));
+                  signInButtonPressed(fullNameController.text, emailController.text, passwordController.text, widget.role!);
                 },
               ),
               SizedBox(height: 15,),
@@ -85,8 +93,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     onTap: () {
                       Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => LoginPage()));
-                    },
+                          MaterialPageRoute(builder: (context) =>BottomNavigation()));                    },
                     child: Text(
                       ' Sign In',
                       style: TextStyle(
@@ -113,4 +120,49 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
         ));
   }
+
+  signInButtonPressed(String name,String email, String password,String role) async {
+    try {
+      var params = {
+        'name': name,
+        "email": email,
+        "password": password,
+        "role": role,
+      };
+      AppIndicator.loadingIndicator();
+      final url =
+      Uri.parse('http://74.208.150.111/api/register');
+      var request = http.MultipartRequest(
+          'POST', url)..fields.addAll(params);
+      request.headers.addAll({
+        // 'Authorization': '',
+        'Accept': 'application/json',
+        'Content-Type': 'multipart/form-data'
+      });
+      var response = await request.send();
+      final respStr = await response.stream.bytesToString();
+      var encoded = json.decode(respStr);
+      final int statusCode = url.port;
+      UserInfoModel data = UserInfoModel.fromJson(encoded);
+      if (response.statusCode == 201) {
+        userInfoModel = data;
+        AppIndicator.disposeIndicator();
+        SharedPreferenceManager.getInstance.updateUserDetails(userInfoModel!);
+        Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+                builder: (context) => BottomNavigation()),
+                (Route<dynamic> route) => false);
+        ToastMessage.message(data.message);
+        setState(() {});
+      } else {
+        ToastMessage.message(data.message);
+        AppIndicator.disposeIndicator();
+        print(statusCode);
+      }
+    } catch (exception) {
+      AppIndicator.disposeIndicator();
+      print("Please Check Internet");
+    }
+  }
+
 }

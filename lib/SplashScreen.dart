@@ -40,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void navigation() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    var isEmail = sharedPreferences.getString('email');
+    var isEmail = sharedPreferences.getString('userEmail');
     if (isEmail != null) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(

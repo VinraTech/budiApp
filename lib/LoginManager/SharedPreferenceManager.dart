@@ -1,4 +1,5 @@
-import 'package:budi/Login%20Section/LoginPage.dart';
+import 'package:budi/Helpers/ToastMessage.dart';
+import 'package:budi/Login%20Section/UserSelectionPage.dart';
 import 'package:budi/Models/UserInfoModel.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,7 +51,7 @@ class SharedPreferenceManager {
     }
   }
 
-  static deleteSavedDetails(BuildContext context) async {
+  static deleteSavedDetails(BuildContext context, String message) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     sharedPreferences.remove("IsLogin");
     sharedPreferences.remove("UserId");
@@ -58,8 +59,9 @@ class SharedPreferenceManager {
     sharedPreferences.remove("userEmail");
     sharedPreferences.remove("roles");
     sharedPreferences.remove("LogInToken");
+    ToastMessage.message(message);
     Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => LoginPage()),
+        MaterialPageRoute(builder: (context) => UserSelectionPage()),
             (Route<dynamic> route) => false);
     // sharedPreferences.remove("LogInToken");
     // SocialLoginManager.handleSignOut();

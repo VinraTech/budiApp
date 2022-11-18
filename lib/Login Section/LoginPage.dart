@@ -99,7 +99,7 @@ class _LoginPageState extends State<LoginPage> {
                   onTap: () {
                     Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => SignUpPage()));
+                        MaterialPageRoute(builder: (context) => SignUpPage(role: widget.role,)));
                   },
                   child: Text(
                     ' Sign Up',
@@ -149,18 +149,18 @@ class _LoginPageState extends State<LoginPage> {
       final respStr = await response.stream.bytesToString();
       var encoded = json.decode(respStr);
       final int statusCode = url.port;
+      UserInfoModel data = UserInfoModel.fromJson(encoded);
       if (response.statusCode == 200) {
         AppIndicator.disposeIndicator();
-        UserInfoModel data = UserInfoModel.fromJson(encoded);
         userInfoModel = data;
         SharedPreferenceManager.getInstance.updateUserDetails(userInfoModel!);
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
                 builder: (context) => BottomNavigation()),
                 (Route<dynamic> route) => false);
-        ToastMessage.message(data.message);
         setState(() {});
       } else {
+        ToastMessage.message(data.message);
         AppIndicator.disposeIndicator();
         print(statusCode);
       }

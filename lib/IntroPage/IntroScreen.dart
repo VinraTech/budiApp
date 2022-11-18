@@ -109,28 +109,28 @@ class _IntroScreenState extends State<IntroScreen> {
                 fontSize: 30,
                 fontWeight: FontWeight.bold),
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           Text(
             content,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
                 color: Colors.grey, fontSize: 20, fontWeight: FontWeight.w400),
           ),
           reverse
               ? Column(
                   children: <Widget>[
-                    SizedBox(
+                    const SizedBox(
                       height: 30,
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Image.asset(image),
                     ),
                   ],
                 )
-              : SizedBox(),
+              : const SizedBox(),
         ],
       ),
     );

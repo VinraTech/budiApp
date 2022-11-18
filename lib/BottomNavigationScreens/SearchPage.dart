@@ -1,3 +1,4 @@
+import 'package:budi/Common%20Fields/AppButton.dart';
 import 'package:budi/Common%20Fields/AppTextField.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
@@ -151,9 +152,45 @@ class _SearchPageState extends State<SearchPage> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Container(
+                            margin: EdgeInsets.only(left: 10),
+                              width: 80,
+                              child: getRegularStyleText(
+                                  msg: 'Radius',
+                                  color: AppColor.SIGNIN_COLOR,
+                                  fontSize: 14,
+                                  textAlign: TextAlign.left)),
+                          Container(
+                              margin: EdgeInsets.only(left: 10),
+                              width: 80,
+                              child: getSemiBoldText(
+                                  msg: '5 Km',
+                                  color: AppColor.SIGNIN_COLOR,
+                                  fontSize: 14,
+                                  textAlign: TextAlign.left)),
+                          Container(
+                            margin: EdgeInsets.only(left: 10,),
+                            height: 1,
+                            width: 130,
+                            color:AppColor.SIGNIN_COLOR,
+                          ),
+                          SizedBox(height: 10,),
                           budiBasics(context,setState),
                           budiBasics(context,setState),
                           budiBasics(context,setState),
+
+                  Container(
+                    height: 60,
+                    child: AppButton(
+                      width: MediaQuery.of(context).size.width,
+                      height: 55,
+                      color: AppColor.BUTTON_COLOR,
+                      label: 'Filter',
+                      onTap: () {
+
+                      },
+                    ),
+                  ),
                         ],),
                     )
                 )
@@ -165,16 +202,16 @@ class _SearchPageState extends State<SearchPage> {
       BuildContext? context, void Function(VoidCallback fn) setState) {
     return Container(
       margin: EdgeInsets.only(top: 8),
-      width: 150,
+      width: 320,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-              margin: EdgeInsets.only(bottom: 5,),
-              height: 10,
+              margin: EdgeInsets.only(bottom: 8,),
+              height: 8,
               child: Transform.scale(
-                  scale: 0.8,
+                  scale: 0.6,
                   child: CupertinoSwitch(
                     activeColor: AppColor.BUTTON_COLOR,
                     value: isStreamed != null ? isStreamed : false,
@@ -185,9 +222,19 @@ class _SearchPageState extends State<SearchPage> {
                     },
                   ))),
           Container(
+            margin: EdgeInsets.only(bottom: 8),
+              width: 80,
+              child: getSemiBoldText(
+                  msg: 'Budi Basic',
+                  color: AppColor.SIGNIN_COLOR,
+                  fontSize: 14,
+                  textAlign: TextAlign.left)),
+          SizedBox(width: 45,),
+          Container(
+            margin: EdgeInsets.only(bottom: 8),
               width: 80,
               child: getRegularStyleText(
-                  msg: 'Budi Basic',
+                  msg: '332 offers',
                   color: AppColor.SIGNIN_COLOR,
                   fontSize: 14,
                   textAlign: TextAlign.left)),

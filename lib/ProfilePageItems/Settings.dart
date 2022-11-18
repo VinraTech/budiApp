@@ -1,10 +1,16 @@
-import 'package:budi/Common%20Fields/AppButton.dart';
+import 'dart:convert';
+import 'package:budi/Helpers/ToastMessage.dart';
+import 'package:http/http.dart' as http;
+import 'package:budi/Helpers/AppIndicator.dart';
+import 'package:budi/LoginManager/SharedPreferenceManager.dart';
+import 'package:budi/Models/UserInfoModel.dart';
 import 'package:budi/ProfilePageItems/ContactUs.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
 import 'package:budi/Utilities/TextHelper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Settings extends StatefulWidget {
   const Settings({Key? key}) : super(key: key);
@@ -38,38 +44,7 @@ class _SettingsState extends State<Settings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(bottom: 10.0, left: 15),
-        child: Container(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Container(
-                height: 35,
-                width: 35,
-                padding: EdgeInsets.all(6.0),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10.0),
-                    color: AppColor.BACKGROUND_COLOR.withOpacity(0.5)),
-                child: Image.asset(
-                  Assets.icLogout,
-                  height: 25,
-                  width: 25,
-                ),
-              ),
-              SizedBox(
-                width: 8,
-              ),
-              Text(
-                'Sign Out',
-                style: TextStyle(
-                    color: AppColor.RED_COLOR, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ),
-      ),
+      bottomNavigationBar: signOutButton(),
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(
@@ -277,6 +252,81 @@ class _SettingsState extends State<Settings> {
     //     : index == 11) {
     //   navigationPush(context, ThreeDList(), function: (v) {});
     // }
+  }
+
+  logoutEveryWhere() async {
+    try {
+      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      var token = sharedPreferences.getString('LogInToken');
+      var params = {"": ""};
+      AppIndicator.loadingIndicator();
+      final url =
+      Uri.parse('http://74.208.150.111/api/logout_everywhere');
+      var request = http.MultipartRequest(
+          'POST', url)..fields.addAll(params);
+      request.headers.addAll({
+        'Authorization': 'Bearer ' + token!,
+        'Accept': 'application/json',
+        // 'Content-Type': 'multipart/form-data'
+      });
+      var response = await request.send();
+      final respStr = await response.stream.bytesToString();
+      var encoded = json.decode(respStr);
+      final int statusCode = url.port;
+      StatusMessage data = StatusMessage.fromJson(encoded);
+      if (response.statusCode == 200) {
+        StatusMessage? statusMessage;
+        AppIndicator.disposeIndicator();
+        statusMessage = data;
+        SharedPreferenceManager.deleteSavedDetails(context,data.message!);
+        setState(() {});
+      } else {
+        ToastMessage.message(data.message);
+        AppIndicator.disposeIndicator();
+        print(statusCode);
+      }
+    } catch (exception) {
+      AppIndicator.disposeIndicator();
+      print("Please Check Internet");
+    }
+  }
+
+  signOutButton() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0, left: 15),
+      child: GestureDetector(
+        onTap: (){
+          logoutEveryWhere();
+        },
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Container(
+              height: 35,
+              width: 35,
+              padding: EdgeInsets.all(6.0),
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                  color: AppColor.BACKGROUND_COLOR.withOpacity(0.5)),
+              child: Image.asset(
+                Assets.icLogout,
+                height: 25,
+                width: 25,
+              ),
+            ),
+            SizedBox(
+              width: 8,
+            ),
+            Text(
+              'Sign Out',
+              style: TextStyle(
+                  color: AppColor.RED_COLOR, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
 }
