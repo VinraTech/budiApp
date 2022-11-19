@@ -1,5 +1,10 @@
+import 'dart:convert';
+import 'package:budi/Models/UserInfoModel.dart';
+import 'package:http/http.dart' as http;
 import 'package:budi/Common%20Fields/AppButton.dart';
 import 'package:budi/Common%20Fields/AppTextField.dart';
+import 'package:budi/Helpers/AppIndicator.dart';
+import 'package:budi/Helpers/ToastMessage.dart';
 import 'package:budi/Login%20Section/ConfirmPassword.dart';
 import 'package:budi/Login%20Section/SignUpPage.dart';
 import 'package:budi/Utilities/AppColor.dart';
@@ -67,9 +72,9 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 color: AppColor.BUTTON_COLOR,
                 label: 'Send',
                 onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ConfirmPassword()));
+                  emailController.text == ''
+                      ? ToastMessage.message('Email Is Required')
+                      : forgotPassword(emailController.text);
                 },
               ),
               SizedBox(
@@ -87,7 +92,8 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     onTap: () {
                       Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => SignUpPage()));
+                          MaterialPageRoute(
+                              builder: (context) => SignUpPage()));
                     },
                     child: Text(
                       ' Sign Up',
@@ -102,5 +108,45 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             ],
           ),
         ));
+  }
+
+  forgotPassword(String email) async {
+    try {
+      var params = {
+        "email": email,
+      };
+      AppIndicator.loadingIndicator();
+      final url = Uri.parse('http://74.208.150.111/api/forgot_password');
+      var request = http.MultipartRequest('POST', url)..fields.addAll(params);
+      request.headers.addAll({
+        // 'Authorization': '',
+        'Accept': 'application/json',
+        'Content-Type': 'multipart/form-data'
+      });
+      var response = await request.send();
+      final respStr = await response.stream.bytesToString();
+      var encoded = json.decode(respStr);
+      final int statusCode = url.port;
+      ApiResultModel data = ApiResultModel.fromJson(encoded);
+      if (response.statusCode == 200) {
+        ApiResultModel? apiResultModel;
+        AppIndicator.disposeIndicator();
+        apiResultModel = data;
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => ConfirmPassword(
+                      forgotToken: apiResultModel?.token,
+                    )));
+        setState(() {});
+      } else {
+        ToastMessage.message(data.message);
+        AppIndicator.disposeIndicator();
+        print(statusCode);
+      }
+    } catch (exception) {
+      AppIndicator.disposeIndicator();
+      print("Please Check Internet");
+    }
   }
 }

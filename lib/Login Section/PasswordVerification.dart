@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:budi/Helpers/ToastMessage.dart';
 import 'package:budi/Login%20Section/LoginPage.dart';
+import 'package:budi/Login%20Section/UserSelectionPage.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +15,17 @@ class PasswordVerification extends StatefulWidget {
 }
 
 class _PasswordVerificationState extends State<PasswordVerification> {
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    ToastMessage.message('Redirecting to Login Page');
+    Timer(Duration(seconds: 3), () {
+      navigation();
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,9 +49,9 @@ class _PasswordVerificationState extends State<PasswordVerification> {
               ),
               GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginPage()));
+                  // Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(builder: (context) => LoginPage()));
                 },
                 child: Container(
                     height: 100,
@@ -48,7 +63,7 @@ class _PasswordVerificationState extends State<PasswordVerification> {
                       color: Colors.white,
                     ),
                     child: Text(
-                      'Password has been changed \n Please login with the neww password \n to continue!',
+                      'Password has been changed \n Please login with the new password \n to continue!',
                       style: TextStyle(
                         fontSize: 16,
                         color: AppColor.GREEN_TEXT_COLOR,
@@ -59,5 +74,11 @@ class _PasswordVerificationState extends State<PasswordVerification> {
             ],
           ),
         ));
+  }
+
+  void navigation() async {
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => UserSelectionPage()),
+            (Route<dynamic> route) => false);
   }
 }

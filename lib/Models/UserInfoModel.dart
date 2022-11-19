@@ -169,18 +169,21 @@ class Pivot {
   }
 }
 
-class StatusMessage {
+class ApiResultModel {
   String? message;
+  String? token;
 
-  StatusMessage({this.message});
+  ApiResultModel({this.message,this.token});
 
-  StatusMessage.fromJson(Map<String, dynamic> json) {
+  ApiResultModel.fromJson(Map<String, dynamic> json) {
     message = json['message'];
+    token = json['token'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['message'] = this.message;
+    data['token'] = this.token;
     return data;
   }
 }

@@ -371,7 +371,7 @@ class _ProfilePageState extends State<ProfilePage> {
       var request = http.MultipartRequest(
           'POST', url)..fields.addAll(params);
       request.headers.addAll({
-        'Authorization': 'Bearer ' + token!,
+        'Authorization': 'Bearer ${token!}',
         'Accept': 'application/json',
         // 'Content-Type': 'multipart/form-data'
       });
@@ -379,9 +379,9 @@ class _ProfilePageState extends State<ProfilePage> {
       final respStr = await response.stream.bytesToString();
       var encoded = json.decode(respStr);
       final int statusCode = url.port;
-      StatusMessage data = StatusMessage.fromJson(encoded);
+      ApiResultModel data = ApiResultModel.fromJson(encoded);
       if (response.statusCode == 200) {
-        StatusMessage? statusMessage;
+        ApiResultModel? statusMessage;
         AppIndicator.disposeIndicator();
         statusMessage = data;
         SharedPreferenceManager.deleteSavedDetails(context,data.message!);
