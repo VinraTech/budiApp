@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:budi/Common%20Fields/CircularIndicator.dart';
+import 'package:budi/Models/ProfileDetailModel.dart';
+import 'package:budi/ProfilePageItems/EditProfilePage.dart';
 import 'package:http/http.dart' as http;
 import 'package:budi/Helpers/AppIndicator.dart';
 import 'package:budi/Helpers/ToastMessage.dart';
@@ -15,6 +18,7 @@ import 'package:budi/Utilities/Assets.dart';
 import 'package:budi/Utilities/TextHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -24,6 +28,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  ProfileDetailModel? profileDetailModel;
+
   List<String> _names = [
     'BUDI App Balance',
     'BUDI tokens',
@@ -62,98 +68,180 @@ class _ProfilePageState extends State<ProfilePage> {
     Assets.icLogout,
   ];
 
+  Future<void> getProfileDetails() async {
+    try {
+      SharedPreferences sharedPreferences =
+          await SharedPreferences.getInstance();
+      var token = sharedPreferences.getString('LogInToken');
+      final res = await http
+          .get(Uri.parse("http://74.208.150.111/api/profile/show"), headers: {
+        'Authorization': 'Bearer ${token}',
+        'Accept': 'application/json',
+      });
+      final int statusCode = res.statusCode;
+      if (statusCode == 200) {
+        Map<String, dynamic> decoded = json.decode(res.body);
+        ProfileDetailModel data = ProfileDetailModel.fromJson(decoded);
+        profileDetailModel = data;
+        setState(() {});
+      } else {
+        print(statusCode);
+      }
+    } catch (exception) {
+      print("Please Check Internet");
+    }
+  }
+
+  @override
+  void initState() {
+    getProfileDetails();
+    // TODO: implement initState
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.OFF_WHITE_COLOR,
       appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_rounded,
-            size: 25,
-          ),
-          onPressed: () {
-            Navigator.pop(context, true);
-          },
-        ),
+        // leading: IconButton(
+        //   icon: Icon(
+        //     Icons.arrow_back_rounded,
+        //     size: 25,
+        //   ),
+        //   onPressed: () {
+        //     Navigator.pop(context, true);
+        //   },
+        // ),
         backgroundColor: AppColor.BUTTON_COLOR,
         title: Container(
             alignment: Alignment.center,
-            width: MediaQuery.of(context).size.width / 1.5,
+            // width: MediaQuery.of(context).size.width / 1.5,
+            width: MediaQuery.of(context).size.width,
             child: getSemiBoldText(
               msg: 'Profile',
               color: Colors.white,
               fontSize: 16,
             )),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.only(top: 25),
-              width: MediaQuery.of(context).size.width,
-              height: 220,
-              color: Colors.white,
+      body: profileDetailModel != null
+          ? SingleChildScrollView(
               child: Column(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.greenAccent[400],
-                    radius: 50,
-                    child: Image.asset('assets/images/Image.png'), //Text
-                  ),
-                  SizedBox(
-                    height: 6,
-                  ),
-                  Text(
-                    'Joshua Jones',
-                    style:
-                        TextStyle(color: AppColor.SIGNIN_COLOR, fontSize: 16),
-                  ),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Stack(
                     children: [
-                      shareIconView(Assets.icinstagramIcon),
-                      SizedBox(
-                        width: 10,
+                      Container(
+                        padding: EdgeInsets.only(top: 25),
+                        width: MediaQuery.of(context).size.width,
+                        height: 220,
+                        color: Colors.white,
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundImage: NetworkImage(
+                                  profileDetailModel?.profile?.profilePicture ??
+                                      ''),
+                            ),
+                            SizedBox(
+                              height: 6,
+                            ),
+                            Text(
+                              'Joshua Jones',
+                              style: TextStyle(
+                                  color: AppColor.SIGNIN_COLOR, fontSize: 16),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                shareIconView(Assets.icinstagramIcon, () {
+                                  _launchURL(profileDetailModel
+                                          ?.profile?.instagramHandle ??
+                                      ' ');
+                                }),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                shareIconView(Assets.icTikTokIcon, () {
+                                  _launchURL(profileDetailModel
+                                          ?.profile?.tiktokHandle ??
+                                      ' ');
+                                }),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                shareIconView(Assets.icBlackFacebookIcon, () {
+                                  _launchURL(profileDetailModel
+                                          ?.profile?.facebookHandle ??
+                                      ' ');
+                                }),
+                              ],
+                            )
+                          ],
+                        ),
                       ),
-                      shareIconView(Assets.icTikTokIcon),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      shareIconView(Assets.icBlackFacebookIcon),
+                      Positioned(
+                          right: 15,
+                          top: 15,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => EditPage(
+                                            postMedia: profileDetailModel
+                                                    ?.profile?.profilePicture ??
+                                                '',
+                                          )));
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                border:
+                                    Border.all(color: AppColor.BUTTON_COLOR),
+                              ),
+                              child: Image.asset(
+                                Assets.icEditProfile,
+                                height: 35,
+                                width: 35,
+                              ),
+                            ),
+                          ))
                     ],
-                  )
+                  ),
+                  SizedBox(
+                    height: 8,
+                  ),
+                  tabOptions(_names, logoOne),
+                  SizedBox(
+                    height: 8,
+                  ),
                 ],
               ),
-            ),
-            SizedBox(
-              height: 8,
-            ),
-            tabOptions(_names, logoOne),
-            SizedBox(
-              height: 8,
-            ),
-          ],
-        ),
-      ),
+            )
+          : circularIndicator(context),
     );
   }
 
-  shareIconView(String image) {
-    return Container(
-      height: 35,
-      width: 35,
-      padding: EdgeInsets.all(6.0),
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10.0),
-          color: AppColor.BACKGROUND_COLOR.withOpacity(0.5)),
-      child: Image.asset(
-        image,
-        height: 25,
-        width: 25,
+  shareIconView(String image, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 35,
+        width: 35,
+        padding: EdgeInsets.all(6.0),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10.0),
+            color: AppColor.BACKGROUND_COLOR.withOpacity(0.5)),
+        child: Image.asset(
+          image,
+          height: 25,
+          width: 25,
+        ),
       ),
     );
   }
@@ -162,28 +250,22 @@ class _ProfilePageState extends State<ProfilePage> {
     if (index == 0) {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => BudiAppBalance()));
-    }
-    else if (index == 5) {
+    } else if (index == 5) {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => NotificationPage()));
-    }
-    else if (index == 6) {
+    } else if (index == 6) {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => InviteFriends()));
-    }
-    else if (index == 8) {
+    } else if (index == 8) {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => MyReviews()));
-    }
-    else if (index == 13) {
+    } else if (index == 13) {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => TermsOfService()));
-    }
-    else if (index == 14) {
+    } else if (index == 14) {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => Settings()));
-    }
-    else if (index == 15) {
+    } else if (index == 15) {
       logOutPressed();
     }
     // else if (index == 2) {
@@ -359,17 +441,23 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
 
   logOutPressed() async {
     try {
-      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      SharedPreferences sharedPreferences =
+          await SharedPreferences.getInstance();
       var token = sharedPreferences.getString('LogInToken');
       var params = {"": ""};
       AppIndicator.loadingIndicator();
-      final url =
-      Uri.parse('http://74.208.150.111/api/logout');
-      var request = http.MultipartRequest(
-          'POST', url)..fields.addAll(params);
+      final url = Uri.parse('http://74.208.150.111/api/logout');
+      var request = http.MultipartRequest('POST', url)..fields.addAll(params);
       request.headers.addAll({
         'Authorization': 'Bearer ${token!}',
         'Accept': 'application/json',
@@ -384,7 +472,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ApiResultModel? statusMessage;
         AppIndicator.disposeIndicator();
         statusMessage = data;
-        SharedPreferenceManager.deleteSavedDetails(context,data.message!);
+        SharedPreferenceManager.deleteSavedDetails(context, data.message!);
         setState(() {});
       } else {
         ToastMessage.message(data.message);

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:budi/AgentSection/AgentsNearby.dart';
 import 'package:budi/BottomNavigationScreens/SearchPage.dart';
 import 'package:budi/Common%20Fields/AppDailogBox.dart';
@@ -9,6 +11,10 @@ import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
 import 'package:budi/Utilities/TextHelper.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -21,6 +27,107 @@ class _HomePageState extends State<HomePage> {
   TextEditingController searchController = TextEditingController();
 
   List<String> travelOptions = ['Hotels', 'Car Rentals', 'Travel insurance'];
+  String? _currentAddress;
+  Position? _currentPosition;
+
+  Future<bool> _handleLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Location services are disabled. Please enable the services')));
+      return false;
+    }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permissions are denied')));
+        return false;
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Location permissions are permanently denied, we cannot request permissions.')));
+      return false;
+    }
+    return true;
+  }
+
+  getCurrentPosition() async {
+    final hasPermission = await _handleLocationPermission();
+
+    if (!hasPermission) return;
+    await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
+        .then((Position position) async {
+      setState(() => _currentPosition = position);
+      _getAddressFromLatLng(_currentPosition!);
+      print(_currentPosition?.latitude ?? "");
+      print( _currentPosition?.longitude ?? "");
+      sendCoOrdinates(_currentPosition!.latitude.toString(), _currentPosition!.longitude.toString());
+    }).catchError((e) {
+      debugPrint(e);
+    });
+  }
+
+  sendCoOrdinates(String latitude, String longitude) async {
+    try {
+      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      var token = sharedPreferences.getString('LogInToken');
+      var params = {
+        "latitude": latitude,
+        "longitude": longitude,
+      };
+      final url =
+      Uri.parse('http://74.208.150.111/api/coordinates/update');
+      var request = http.MultipartRequest(
+          'POST', url)..fields.addAll(params);
+      request.headers.addAll({
+        'Accept': 'application/json',
+        'Content-Type': 'multipart/form-data',
+      'Authorization': 'Bearer ${token}',
+      });
+      var response = await request.send();
+      final respStr = await response.stream.bytesToString();
+      var encoded = json.decode(respStr);
+      final int statusCode = url.port;
+      if (response.statusCode == 200) {
+        // userInfoModel = data;
+        // SharedPreferenceManager.getInstance.updateUserDetails(userInfoModel!);
+        setState(() {});
+      } else {
+        print(statusCode);
+      }
+    } catch (exception) {
+      print("Please Check Internet");
+    }
+  }
+
+  Future<void> _getAddressFromLatLng(Position position) async {
+    await placemarkFromCoordinates(
+        _currentPosition!.latitude, _currentPosition!.longitude)
+        .then((List<Placemark> placemarks) {
+      Placemark place = placemarks[0];
+      setState(() {
+        _currentAddress =
+        '${place.street}, ${place.subLocality}, ${place.subAdministrativeArea}, ${place.postalCode}';
+      });
+    }).catchError((e) {
+      debugPrint(e);
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    getCurrentPosition();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

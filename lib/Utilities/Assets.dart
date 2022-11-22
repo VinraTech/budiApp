@@ -57,4 +57,5 @@ class Assets {
   static String icMessenger = "assets/images/ic_messenger.png";
   static String icCopy = "assets/images/ic_copy.png";
   static String icFacbook = "assets/images/ic_facebook.png";
+  static String icEditProfile = "assets/images/ic_editProfile.png";
 }
