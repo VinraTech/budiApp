@@ -71,7 +71,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> getProfileDetails() async {
     try {
       SharedPreferences sharedPreferences =
-          await SharedPreferences.getInstance();
+      await SharedPreferences.getInstance();
       var token = sharedPreferences.getString('LogInToken');
       final res = await http
           .get(Uri.parse("http://74.208.150.111/api/profile/show"), headers: {
@@ -117,7 +117,10 @@ class _ProfilePageState extends State<ProfilePage> {
         title: Container(
             alignment: Alignment.center,
             // width: MediaQuery.of(context).size.width / 1.5,
-            width: MediaQuery.of(context).size.width,
+            width: MediaQuery
+                .of(context)
+                .size
+                .width,
             child: getSemiBoldText(
               msg: 'Profile',
               color: Colors.white,
@@ -126,103 +129,108 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: profileDetailModel != null
           ? SingleChildScrollView(
-              child: Column(
-                children: [
-                  Stack(
+        child: Column(
+          children: [
+            Stack(
+              children: [
+                Container(
+                  padding: EdgeInsets.only(top: 25),
+                  width: MediaQuery
+                      .of(context)
+                      .size
+                      .width,
+                  height: 220,
+                  color: Colors.white,
+                  child: Column(
                     children: [
-                      Container(
-                        padding: EdgeInsets.only(top: 25),
-                        width: MediaQuery.of(context).size.width,
-                        height: 220,
-                        color: Colors.white,
-                        child: Column(
-                          children: [
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundImage: NetworkImage(
-                                  profileDetailModel?.profile?.profilePicture ??
-                                      ''),
-                            ),
-                            SizedBox(
-                              height: 6,
-                            ),
-                            Text(
-                              'Joshua Jones',
-                              style: TextStyle(
-                                  color: AppColor.SIGNIN_COLOR, fontSize: 16),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                shareIconView(Assets.icinstagramIcon, () {
-                                  _launchURL(profileDetailModel
-                                          ?.profile?.instagramHandle ??
-                                      ' ');
-                                }),
-                                SizedBox(
-                                  width: 10,
-                                ),
-                                shareIconView(Assets.icTikTokIcon, () {
-                                  _launchURL(profileDetailModel
-                                          ?.profile?.tiktokHandle ??
-                                      ' ');
-                                }),
-                                SizedBox(
-                                  width: 10,
-                                ),
-                                shareIconView(Assets.icBlackFacebookIcon, () {
-                                  _launchURL(profileDetailModel
-                                          ?.profile?.facebookHandle ??
-                                      ' ');
-                                }),
-                              ],
-                            )
-                          ],
-                        ),
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundImage: NetworkImage(
+                            profileDetailModel?.profile?.profilePicture ??
+                                ''),
                       ),
-                      Positioned(
-                          right: 15,
-                          top: 15,
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => EditPage(
-                                            postMedia: profileDetailModel
-                                                    ?.profile?.profilePicture ??
-                                                '',
-                                          )));
-                            },
-                            child: Container(
-                              padding: EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                border:
-                                    Border.all(color: AppColor.BUTTON_COLOR),
-                              ),
-                              child: Image.asset(
-                                Assets.icEditProfile,
-                                height: 35,
-                                width: 35,
-                              ),
-                            ),
-                          ))
+                      SizedBox(
+                        height: 6,
+                      ),
+                      Text(
+                        'Joshua Jones',
+                        style: TextStyle(
+                            color: AppColor.SIGNIN_COLOR, fontSize: 16),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          shareIconView(Assets.icinstagramIcon, () {
+                            _launchURL(profileDetailModel
+                                ?.profile?.instagramHandle ??
+                                ' ');
+                          }),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          shareIconView(Assets.icTikTokIcon, () {
+                            _launchURL(profileDetailModel
+                                ?.profile?.tiktokHandle ??
+                                ' ');
+                          }),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          shareIconView(Assets.icBlackFacebookIcon, () {
+                            _launchURL(profileDetailModel
+                                ?.profile?.facebookHandle ??
+                                ' ');
+                          }),
+                        ],
+                      )
                     ],
                   ),
-                  SizedBox(
-                    height: 8,
-                  ),
-                  tabOptions(_names, logoOne),
-                  SizedBox(
-                    height: 8,
-                  ),
-                ],
-              ),
-            )
+                ),
+                Positioned(
+                    right: 15,
+                    top: 15,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    EditPage(
+                                      postMedia: profileDetailModel
+                                          ?.profile?.profilePicture ?? '',
+                                    ))).then((value) {
+                          getProfileDetails();
+                        });
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          border:
+                          Border.all(color: AppColor.BUTTON_COLOR),
+                        ),
+                        child: Image.asset(
+                          Assets.icEditProfile,
+                          height: 35,
+                          width: 35,
+                        ),
+                      ),
+                    ))
+              ],
+            ),
+            SizedBox(
+              height: 8,
+            ),
+            tabOptions(_names, logoOne),
+            SizedBox(
+              height: 8,
+            ),
+          ],
+        ),
+      )
           : circularIndicator(context),
     );
   }
@@ -383,10 +391,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   index == 4 || index == 10 || index == 13
                       ? Container(
-                          height: 5,
-                          width: MediaQuery.of(context).size.width,
-                          color: AppColor.OFF_WHITE_COLOR,
-                        )
+                    height: 5,
+                    width: MediaQuery
+                        .of(context)
+                        .size
+                        .width,
+                    color: AppColor.OFF_WHITE_COLOR,
+                  )
                       : SizedBox(),
                   Container(
                       margin: EdgeInsets.only(left: 18, right: 15),
@@ -452,12 +463,13 @@ class _ProfilePageState extends State<ProfilePage> {
   logOutPressed() async {
     try {
       SharedPreferences sharedPreferences =
-          await SharedPreferences.getInstance();
+      await SharedPreferences.getInstance();
       var token = sharedPreferences.getString('LogInToken');
       var params = {"": ""};
       AppIndicator.loadingIndicator();
       final url = Uri.parse('http://74.208.150.111/api/logout');
-      var request = http.MultipartRequest('POST', url)..fields.addAll(params);
+      var request = http.MultipartRequest('POST', url)
+        ..fields.addAll(params);
       request.headers.addAll({
         'Authorization': 'Bearer ${token!}',
         'Accept': 'application/json',

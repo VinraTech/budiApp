@@ -82,8 +82,11 @@ class _EditPageState extends State<EditPage> {
                         if (isSuccess) {
                           setState(() {
                             imageFile = File(result.path);
+                            Navigator.of(context, rootNavigator: true).pop();
                           });
                           // uploadSingleImage([imageToUpload.path]);
+                        }else{
+                          Navigator.of(context, rootNavigator: true).pop();
                         }
                       });
                     },
@@ -98,8 +101,11 @@ class _EditPageState extends State<EditPage> {
                             if (isSuccess) {
                               setState(() {
                                 imageFile = File(result.path);
+                                Navigator.of(context, rootNavigator: true).pop();
                               });
                               // uploadSingleImage([imageToUpload.path]);
+                            }else{
+                              Navigator.of(context, rootNavigator: true).pop();
                             }
                           });
                     },
