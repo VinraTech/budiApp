@@ -75,7 +75,7 @@ class _ProfilePageState extends State<ProfilePage> {
       var token = sharedPreferences.getString('LogInToken');
       final res = await http
           .get(Uri.parse("http://74.208.150.111/api/profile/show"), headers: {
-        'Authorization': 'Bearer ${token}',
+        'Authorization': 'Bearer $token',
         'Accept': 'application/json',
       });
       final int statusCode = res.statusCode;
@@ -153,7 +153,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         height: 6,
                       ),
                       Text(
-                        'Joshua Jones',
+                        profileDetailModel?.profile?.user?.name ?? '',
                         style: TextStyle(
                             color: AppColor.SIGNIN_COLOR, fontSize: 16),
                       ),
@@ -269,7 +269,7 @@ class _ProfilePageState extends State<ProfilePage> {
           context, MaterialPageRoute(builder: (context) => MyReviews()));
     } else if (index == 13) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => TermsOfService()));
+          context, MaterialPageRoute(builder: (context) => TermsOfService(title: 'Terms of service',pageType: 'terms',)));
     } else if (index == 14) {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => Settings()));

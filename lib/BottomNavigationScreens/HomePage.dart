@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:budi/AgentSection/AgentsNearby.dart';
 import 'package:budi/BottomNavigationScreens/SearchPage.dart';
 import 'package:budi/Common%20Fields/AppDailogBox.dart';
@@ -7,6 +6,7 @@ import 'package:budi/Common%20Fields/AppTextField.dart';
 import 'package:budi/HomePageItems/Hotels.dart';
 import 'package:budi/HomePageItems/RentCar.dart';
 import 'package:budi/HomePageItems/TravelInsurance.dart';
+import 'package:budi/Models/UserInfoModel.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
 import 'package:budi/Utilities/TextHelper.dart';
@@ -29,6 +29,34 @@ class _HomePageState extends State<HomePage> {
   List<String> travelOptions = ['Hotels', 'Car Rentals', 'Travel insurance'];
   String? _currentAddress;
   Position? _currentPosition;
+
+  getOffers() async {
+    try {
+      SharedPreferences sharedPreferences =
+      await SharedPreferences.getInstance();
+      var token = sharedPreferences.getString('LogInToken');
+      var userId = sharedPreferences.getString('UserId');
+      final res = await http.get(
+          Uri.parse(
+              "http://74.208.150.111/api/offers"),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          });
+      final int statusCode = res.statusCode;
+      if (statusCode == 200) {
+        Map<String, dynamic> decoded = json.decode(res.body);
+        ApiResultModel data = ApiResultModel.fromJson(decoded);
+        ApiResultModel? statusMessage;
+        statusMessage = data;
+        setState(() {});
+      } else {
+        print(statusCode);
+      }
+    } catch (exception) {
+      print("Please Check Internet");
+    }
+  }
 
   Future<bool> _handleLocationPermission() async {
     bool serviceEnabled;
@@ -68,8 +96,9 @@ class _HomePageState extends State<HomePage> {
       setState(() => _currentPosition = position);
       _getAddressFromLatLng(_currentPosition!);
       print(_currentPosition?.latitude ?? "");
-      print( _currentPosition?.longitude ?? "");
-      sendCoOrdinates(_currentPosition!.latitude.toString(), _currentPosition!.longitude.toString());
+      print(_currentPosition?.longitude ?? "");
+      sendCoOrdinates(_currentPosition!.latitude.toString(),
+          _currentPosition!.longitude.toString());
     }).catchError((e) {
       debugPrint(e);
     });
@@ -77,20 +106,19 @@ class _HomePageState extends State<HomePage> {
 
   sendCoOrdinates(String latitude, String longitude) async {
     try {
-      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      SharedPreferences sharedPreferences =
+          await SharedPreferences.getInstance();
       var token = sharedPreferences.getString('LogInToken');
       var params = {
         "latitude": latitude,
         "longitude": longitude,
       };
-      final url =
-      Uri.parse('http://74.208.150.111/api/coordinates/update');
-      var request = http.MultipartRequest(
-          'POST', url)..fields.addAll(params);
+      final url = Uri.parse('http://74.208.150.111/api/coordinates/update');
+      var request = http.MultipartRequest('POST', url)..fields.addAll(params);
       request.headers.addAll({
         'Accept': 'application/json',
         'Content-Type': 'multipart/form-data',
-      'Authorization': 'Bearer ${token}',
+        'Authorization': 'Bearer ${token}',
       });
       var response = await request.send();
       final respStr = await response.stream.bytesToString();
@@ -110,12 +138,12 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _getAddressFromLatLng(Position position) async {
     await placemarkFromCoordinates(
-        _currentPosition!.latitude, _currentPosition!.longitude)
+            _currentPosition!.latitude, _currentPosition!.longitude)
         .then((List<Placemark> placemarks) {
       Placemark place = placemarks[0];
       setState(() {
         _currentAddress =
-        '${place.street}, ${place.subLocality}, ${place.subAdministrativeArea}, ${place.postalCode}';
+            '${place.street}, ${place.subLocality}, ${place.subAdministrativeArea}, ${place.postalCode}';
       });
     }).catchError((e) {
       debugPrint(e);
@@ -126,6 +154,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     // TODO: implement initState
     getCurrentPosition();
+    getOffers();
     super.initState();
   }
 
@@ -188,7 +217,9 @@ class _HomePageState extends State<HomePage> {
                       onTap: () {
                         Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => SearchPage(isHome: true)));
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    SearchPage(isHome: true)));
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width,
@@ -239,7 +270,11 @@ class _HomePageState extends State<HomePage> {
               onTap: () {
                 Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => AgentsNearBy()));
+                    MaterialPageRoute(
+                        builder: (context) => AgentsNearBy(
+                            latitide: _currentPosition!.latitude.toString(),
+                            longitude:
+                                _currentPosition!.longitude.toString())));
               },
               child: Container(
                 padding: EdgeInsets.all(20),
@@ -402,22 +437,19 @@ class _HomePageState extends State<HomePage> {
             cardView(Assets.icHotels, 'Hotels',
                 'Let us help you choose the accommodation\n that best suits you.',
                 () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Hotels()));
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => Hotels()));
             }),
             cardView(Assets.icDirectionCars, 'Rent a car',
                 'Rent a car of your choice without the hassle', () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => RentCar()));
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => RentCar()));
             }),
             cardView(Assets.icHealthSafety, 'Travel insurance',
                 'Get easy and affordable Travel\n insurance within minutes!',
                 () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => TravelInsurance()));
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => TravelInsurance()));
             }),
             Container(
               height: 300,

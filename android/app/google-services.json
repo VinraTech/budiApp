@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "559863618477",
+    "project_id": "buditravel-2eedb",
+    "storage_bucket": "buditravel-2eedb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:559863618477:android:178b8ba9a464670adc5f24",
+        "android_client_info": {
+          "package_name": "com.example.budi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "559863618477-1k8rcudv4gd603bghu71tpipejcpnaib.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_lUoi_qc7aX8GzJP54v-19b0ZxfoLhJ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "559863618477-1k8rcudv4gd603bghu71tpipejcpnaib.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,3 +1,5 @@
+import 'package:budi/Models/UserInfoModel.dart';
+
 class ProfileDetailModel {
   String? message;
   Profile? profile;
@@ -29,6 +31,7 @@ class Profile {
   String? facebookHandle;
   String? createdAt;
   String? updatedAt;
+  User? user;
 
   Profile(
       {this.id,
@@ -38,7 +41,8 @@ class Profile {
         this.tiktokHandle,
         this.facebookHandle,
         this.createdAt,
-        this.updatedAt});
+        this.updatedAt,
+        this.user});
 
   Profile.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -49,6 +53,7 @@ class Profile {
     facebookHandle = json['facebook_handle'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
+    user = json['user'] != null ? new User.fromJson(json['user']) : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -61,6 +66,9 @@ class Profile {
     data['facebook_handle'] = this.facebookHandle;
     data['created_at'] = this.createdAt;
     data['updated_at'] = this.updatedAt;
+    if (this.user != null) {
+      data['user'] = this.user!.toJson();
+    }
     return data;
   }
 }

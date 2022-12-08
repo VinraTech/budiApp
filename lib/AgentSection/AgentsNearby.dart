@@ -1,12 +1,21 @@
+import 'dart:convert';
+import 'package:budi/Helpers/AppIndicator.dart';
+import 'package:http/http.dart' as http;
 import 'package:budi/AgentSection/AgentsProfile.dart';
 import 'package:budi/Common%20Fields/AppDailogBox.dart';
 import 'package:budi/Common%20Fields/AppTextField.dart';
+import 'package:budi/Helpers/ToastMessage.dart';
+import 'package:budi/Models/UserInfoModel.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AgentsNearBy extends StatefulWidget {
-  const AgentsNearBy({Key? key}) : super(key: key);
+  String? latitide;
+  String? longitude;
+
+  AgentsNearBy({Key? key, this.longitude, this.latitide}) : super(key: key);
 
   @override
   State<AgentsNearBy> createState() => _AgentsNearByState();
@@ -14,6 +23,41 @@ class AgentsNearBy extends StatefulWidget {
 
 class _AgentsNearByState extends State<AgentsNearBy> {
   TextEditingController searchController = TextEditingController();
+
+  agentsNearby(String latitide, String longitude) async {
+    try {
+      SharedPreferences sharedPreferences =
+          await SharedPreferences.getInstance();
+      var token = sharedPreferences.getString('LogInToken');
+      final res = await http.get(
+          Uri.parse(
+              "http://74.208.150.111/api/coordinates/nearby_agents?latitude=$latitide&longitude=$longitude"),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          });
+      final int statusCode = res.statusCode;
+      if (statusCode == 200) {
+        Map<String, dynamic> decoded = json.decode(res.body);
+        ApiResultModel data = ApiResultModel.fromJson(decoded);
+        ApiResultModel? statusMessage;
+        statusMessage = data;
+        setState(() {});
+      } else {
+        print(statusCode);
+      }
+    } catch (exception) {
+      AppIndicator.disposeIndicator();
+      print("Please Check Internet");
+    }
+  }
+
+  @override
+  void initState() {
+    agentsNearby(widget.latitide!, widget.longitude!);
+    // TODO: implement initState
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +106,8 @@ class _AgentsNearByState extends State<AgentsNearBy> {
                       onTap: () {
                         Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => AgentsProfilePage()));
+                            MaterialPageRoute(
+                                builder: (context) => AgentsProfilePage()));
                       },
                       child: Container(
                         width: 163,

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:budi/Helpers/ToastMessage.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'package:budi/BottomNavigation.dart';
 import 'package:budi/Common%20Fields/AppButton.dart';
@@ -67,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
               onTap: () {
                 Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => ForgotPassword()));
+                    MaterialPageRoute(builder: (context) => ForgotPassword(pageType: 'forgot',)));
               },
               child: Text(
                 'Forgot password',
@@ -80,7 +81,12 @@ class _LoginPageState extends State<LoginPage> {
               color: AppColor.BUTTON_COLOR,
               label: 'Sign In',
               onTap: () {
-                loginButtonPressed(emailController.text, passwordController.text, widget.role!);
+                FirebaseMessaging.instance.getToken().then((value) {
+                  loginButtonPressed(emailController.text, passwordController.text, widget.role!,value!);
+                  // String? token = value;
+                  // fcmToken = value;
+                });
+
                 // Navigator.push(
                 //     context,
                 //     MaterialPageRoute(builder: (context) => BottomNavigation()));
@@ -128,12 +134,13 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  loginButtonPressed(String email, String password,String role) async {
+  loginButtonPressed(String email, String password,String role,String fcmToken) async {
     try {
       var params = {
         "email": email,
         "password": password,
         "role": role,
+        "device_id": fcmToken,
       };
       AppIndicator.loadingIndicator();
       final url =

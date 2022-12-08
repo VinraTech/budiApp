@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:budi/Helpers/ToastMessage.dart';
+import 'package:budi/Login%20Section/ConfirmPassword.dart';
+import 'package:budi/Login%20Section/ForgotPassword.dart';
+import 'package:budi/ProfilePageItems/TermsOfService.dart';
 import 'package:http/http.dart' as http;
 import 'package:budi/Helpers/AppIndicator.dart';
 import 'package:budi/LoginManager/SharedPreferenceManager.dart';
@@ -153,9 +156,15 @@ class _SettingsState extends State<Settings> {
 
   void onItemSelection(BuildContext context, int index) {
     if (index == 0) {
-      // Navigator.push(
-      //     context, MaterialPageRoute(builder: (context) => BudiAppBalance()));
-    } else if (index == 6) {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => ForgotPassword(pageType: 'profile',)));
+    } else if (index == 1) {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => ConfirmPassword(pageType: 'reset',)));
+    }else if (index == 2) {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => TermsOfService(title: 'Privacy Policy',pageType: 'Privacy',)));
+    }else if (index == 6) {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => ContactUs()));
     }

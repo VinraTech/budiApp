@@ -9,14 +9,14 @@ import 'package:budi/LoginManager/SharedPreferenceManager.dart';
 import 'package:budi/Models/UserInfoModel.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
 
 class SignUpPage extends StatefulWidget {
   String? role;
 
-  SignUpPage({Key? key,this.role}) : super(key: key);
+  SignUpPage({Key? key, this.role}) : super(key: key);
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -28,7 +28,6 @@ class _SignUpPageState extends State<SignUpPage> {
   TextEditingController fullNameController = TextEditingController();
   UserInfoModel? userInfoModel;
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,7 +36,7 @@ class _SignUpPageState extends State<SignUpPage> {
           child: Column(
             children: [
               Container(
-                margin: EdgeInsets.only(top: 60),
+                margin: const EdgeInsets.only(top: 60),
                 height: MediaQuery.of(context).size.width / 1.5,
                 width: MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(
@@ -77,15 +76,26 @@ class _SignUpPageState extends State<SignUpPage> {
                 color: AppColor.BUTTON_COLOR,
                 label: 'Sign Up',
                 onTap: () {
-                  signInButtonPressed(fullNameController.text, emailController.text, passwordController.text, widget.role!);
+                  FirebaseMessaging.instance.getToken().then((value) {
+                    signInButtonPressed(
+                        fullNameController.text,
+                        emailController.text,
+                        passwordController.text,
+                        widget.role!,
+                        value!);
+                    // String? token = value;
+                    // fcmToken = value;
+                  });
                 },
               ),
-              SizedBox(height: 15,),
+              const SizedBox(
+                height: 15,
+              ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     'Already have an account?',
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
@@ -93,8 +103,10 @@ class _SignUpPageState extends State<SignUpPage> {
                     onTap: () {
                       Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) =>BottomNavigation()));                    },
-                    child: Text(
+                          MaterialPageRoute(
+                              builder: (context) => BottomNavigation()));
+                    },
+                    child: const Text(
                       ' Sign In',
                       style: TextStyle(
                           fontSize: 14,
@@ -105,8 +117,8 @@ class _SignUpPageState extends State<SignUpPage> {
                 ],
               ),
               Container(
-                margin: EdgeInsets.only(top: 60),
-                child: Text(
+                margin: const EdgeInsets.only(top: 60),
+                child: const Text(
                   'Or Sign in with',
                   style: TextStyle(fontSize: 14, color: AppColor.SIGNIN_COLOR),
                 ),
@@ -115,25 +127,27 @@ class _SignUpPageState extends State<SignUpPage> {
                 googlePressed: () {},
                 facebookPressed: () {},
               ),
-              SizedBox(height: 30,)
+              const SizedBox(
+                height: 30,
+              )
             ],
           ),
         ));
   }
 
-  signInButtonPressed(String name,String email, String password,String role) async {
+  signInButtonPressed(String name, String email, String password, String role,
+      String fcmToken) async {
     try {
       var params = {
         'name': name,
         "email": email,
         "password": password,
         "role": role,
+        "device_id": fcmToken,
       };
       AppIndicator.loadingIndicator();
-      final url =
-      Uri.parse('http://74.208.150.111/api/register');
-      var request = http.MultipartRequest(
-          'POST', url)..fields.addAll(params);
+      final url = Uri.parse('http://74.208.150.111/api/register');
+      var request = http.MultipartRequest('POST', url)..fields.addAll(params);
       request.headers.addAll({
         // 'Authorization': '',
         'Accept': 'application/json',
@@ -149,9 +163,8 @@ class _SignUpPageState extends State<SignUpPage> {
         AppIndicator.disposeIndicator();
         SharedPreferenceManager.getInstance.updateUserDetails(userInfoModel!);
         Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-                builder: (context) => BottomNavigation()),
-                (Route<dynamic> route) => false);
+            MaterialPageRoute(builder: (context) => BottomNavigation()),
+            (Route<dynamic> route) => false);
         ToastMessage.message(data.message);
         setState(() {});
       } else {
@@ -164,5 +177,4 @@ class _SignUpPageState extends State<SignUpPage> {
       print("Please Check Internet");
     }
   }
-
 }

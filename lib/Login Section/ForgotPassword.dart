@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:budi/LoginManager/SharedPreferenceManager.dart';
 import 'package:budi/Models/UserInfoModel.dart';
 import 'package:http/http.dart' as http;
 import 'package:budi/Common%20Fields/AppButton.dart';
@@ -10,9 +11,12 @@ import 'package:budi/Login%20Section/SignUpPage.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ForgotPassword extends StatefulWidget {
-  const ForgotPassword({Key? key}) : super(key: key);
+  String? pageType;
+
+  ForgotPassword({Key? key, this.pageType}) : super(key: key);
 
   @override
   State<ForgotPassword> createState() => _ForgotPasswordState();
@@ -70,41 +74,45 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 width: MediaQuery.of(context).size.width,
                 height: 55,
                 color: AppColor.BUTTON_COLOR,
-                label: 'Send',
+                label: widget.pageType == 'profile' ? 'Change Email' : 'Send',
                 onTap: () {
                   emailController.text == ''
                       ? ToastMessage.message('Email Is Required')
-                      : forgotPassword(emailController.text);
+                      : widget.pageType == 'profile'
+                          ? changeEmail(emailController.text)
+                          : forgotPassword(emailController.text);
                 },
               ),
               SizedBox(
                 height: 15,
               ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Don’t have an account?',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => SignUpPage()));
-                    },
-                    child: Text(
-                      ' Sign Up',
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: AppColor.BUTTON_COLOR,
-                          fontWeight: FontWeight.bold),
+              widget.pageType == 'profile'
+                  ? SizedBox()
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Don’t have an account?',
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => SignUpPage()));
+                          },
+                          child: Text(
+                            ' Sign Up',
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: AppColor.BUTTON_COLOR,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        )
+                      ],
                     ),
-                  )
-                ],
-              ),
             ],
           ),
         ));
@@ -136,8 +144,49 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             context,
             MaterialPageRoute(
                 builder: (context) => ConfirmPassword(
+                      pageType: 'confirm',
                       forgotToken: apiResultModel?.token,
                     )));
+        setState(() {});
+      } else {
+        ToastMessage.message(data.message);
+        AppIndicator.disposeIndicator();
+        print(statusCode);
+      }
+    } catch (exception) {
+      AppIndicator.disposeIndicator();
+      print("Please Check Internet");
+    }
+  }
+
+  changeEmail(String email) async {
+    try {
+      SharedPreferences sharedPreferences =
+      await SharedPreferences.getInstance();
+      var token = sharedPreferences.getString('LogInToken');
+      var params = {
+        "email": email,
+      };
+      AppIndicator.loadingIndicator();
+      final url = Uri.parse('http://74.208.150.111/api/change_email');
+      var request = http.MultipartRequest('POST', url)..fields.addAll(params);
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+        'Content-Type': 'multipart/form-data'
+      });
+      var response = await request.send();
+      final respStr = await response.stream.bytesToString();
+      var encoded = json.decode(respStr);
+      final int statusCode = url.port;
+      ApiResultModel data = ApiResultModel.fromJson(encoded);
+      if (response.statusCode == 200) {
+        ApiResultModel? apiResultModel;
+        AppIndicator.disposeIndicator();
+        apiResultModel = data;
+        ToastMessage.message(data.message);
+        SharedPreferenceManager.deleteSavedDetails(context, data.message!);
+        // Navigator.pop(context);
         setState(() {});
       } else {
         ToastMessage.message(data.message);

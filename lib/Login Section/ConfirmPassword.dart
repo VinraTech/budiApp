@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:budi/Common%20Fields/AppButton.dart';
@@ -10,10 +9,14 @@ import 'package:budi/Models/UserInfoModel.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ConfirmPassword extends StatefulWidget {
   String? forgotToken;
-  ConfirmPassword({Key? key,this.forgotToken}) : super(key: key);
+  String? pageType;
+
+  ConfirmPassword({Key? key, this.forgotToken, this.pageType})
+      : super(key: key);
 
   @override
   State<ConfirmPassword> createState() => _ConfirmPasswordState();
@@ -70,13 +73,19 @@ class _ConfirmPasswordState extends State<ConfirmPassword> {
                 color: AppColor.BUTTON_COLOR,
                 label: 'Confirm',
                 onTap: () {
-                 if(newPasswordController.text != confirmPasswordController.text){
-                   ToastMessage.message('Password Does Not Match');
-                 }else if(newPasswordController.text == '' || confirmPasswordController.text == ''){
-                   ToastMessage.message('All Fields Are Required');
-                 }else{
-                   confirmPassword(newPasswordController.text,confirmPasswordController.text);
-                 }
+                  if (newPasswordController.text !=
+                      confirmPasswordController.text) {
+                    ToastMessage.message('Password Does Not Match');
+                  } else if (newPasswordController.text == '' ||
+                      confirmPasswordController.text == '') {
+                    ToastMessage.message('All Fields Are Required');
+                  } else {
+                    widget.pageType == 'reset'
+                        ? resetPassword(newPasswordController.text,
+                            confirmPasswordController.text)
+                        : confirmPassword(newPasswordController.text,
+                            confirmPasswordController.text);
+                  }
                 },
               )
             ],
@@ -111,7 +120,7 @@ class _ConfirmPasswordState extends State<ConfirmPassword> {
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
                 builder: (context) => const PasswordVerification()),
-                (Route<dynamic> route) => false);
+            (Route<dynamic> route) => false);
         // Navigator.of(context)
         //     .push(MaterialPageRoute(builder: (context) => PasswordVerification()));
         setState(() {});
@@ -126,6 +135,43 @@ class _ConfirmPasswordState extends State<ConfirmPassword> {
     }
   }
 
-
-
+  resetPassword(String newPassword, String confirmPassword) async {
+    try {
+      SharedPreferences sharedPreferences =
+      await SharedPreferences.getInstance();
+      var token = sharedPreferences.getString('LogInToken');
+      var params = {
+        "password": newPassword,
+        "password_confirmation": confirmPassword,
+      };
+      AppIndicator.loadingIndicator();
+      final url = Uri.parse('http://74.208.150.111/api/change_password');
+      var request = http.MultipartRequest('POST', url)..fields.addAll(params);
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+        'Content-Type': 'multipart/form-data'
+      });
+      var response = await request.send();
+      final respStr = await response.stream.bytesToString();
+      var encoded = json.decode(respStr);
+      final int statusCode = url.port;
+      ApiResultModel data = ApiResultModel.fromJson(encoded);
+      if (response.statusCode == 200) {
+        ApiResultModel? apiResultModel;
+        AppIndicator.disposeIndicator();
+        apiResultModel = data;
+        ToastMessage.message(data.message);
+        Navigator.pop(context);
+        setState(() {});
+      } else {
+        ToastMessage.message(data.message);
+        AppIndicator.disposeIndicator();
+        print(statusCode);
+      }
+    } catch (exception) {
+      AppIndicator.disposeIndicator();
+      print("Please Check Internet");
+    }
+  }
 }
