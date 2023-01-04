@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:budi/LoginManager/SharedPreferenceManager.dart';
 import 'package:http/http.dart' as http;
 import 'package:budi/Common%20Fields/AppButton.dart';
 import 'package:budi/Common%20Fields/AppTextField.dart';
@@ -162,7 +163,7 @@ class _ConfirmPasswordState extends State<ConfirmPassword> {
         AppIndicator.disposeIndicator();
         apiResultModel = data;
         ToastMessage.message(data.message);
-        Navigator.pop(context);
+        SharedPreferenceManager.deleteSavedDetails(context, data.message!);
         setState(() {});
       } else {
         ToastMessage.message(data.message);

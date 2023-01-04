@@ -1,10 +1,12 @@
 import 'package:budi/Common%20Fields/AppDailogBox.dart';
+import 'package:budi/Models/FeaturedAgentsModel.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
 import 'package:flutter/material.dart';
 
 class TabProfile extends StatefulWidget {
-  const TabProfile({Key? key}) : super(key: key);
+  FeaturedAgentsModel? featuredAgents;
+  TabProfile({Key? key,this.featuredAgents}) : super(key: key);
 
   @override
   State<TabProfile> createState() => _TabProfileState();
@@ -18,7 +20,7 @@ class _TabProfileState extends State<TabProfile> {
         children: [
           Container(
             height: 190,
-            margin: EdgeInsets.all(15),
+            margin: const EdgeInsets.all(15),
             child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: 6,
@@ -107,11 +109,11 @@ class _TabProfileState extends State<TabProfile> {
                 SizedBox(
                   height: 20,
                 ),
-                Container(
+                SizedBox(
                   height: 225,
                   child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: 6,
+                      itemCount: widget.featuredAgents?.agents?.length,
                       padding: EdgeInsets.zero,
                       itemBuilder: (context, index) {
                         return Container(
@@ -131,8 +133,8 @@ class _TabProfileState extends State<TabProfile> {
                                       backgroundColor:
                                       Colors.greenAccent[400],
                                       radius: 30,
-                                      child: Image.asset(
-                                          'assets/images/Image.png'), //Text
+                                        backgroundImage: NetworkImage(
+                                            widget.featuredAgents?.agents?[index].profile?.profilePicture ?? ''), //Text
                                     ),
                                     Positioned(
                                         top: 0,
@@ -148,7 +150,7 @@ class _TabProfileState extends State<TabProfile> {
                                   height: 6,
                                 ),
                                 textView(
-                                    'Alex Buckmaster', 16, AppColor.HOMETEXT),
+                                    widget.featuredAgents?.agents?[index].name ?? '', 16, AppColor.HOMETEXT),
                                 SizedBox(
                                   height: 6,
                                 ),
@@ -160,11 +162,11 @@ class _TabProfileState extends State<TabProfile> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    starIcon(Icons.star, 12),
-                                    starIcon(Icons.star, 12),
-                                    starIcon(Icons.star, 12),
-                                    starIcon(Icons.star, 12),
-                                    starIcon(Icons.star, 12),
+                                    widget.featuredAgents?.agents?[index].averageRating == 1 ?starIcon(Icons.star, 12) : SizedBox(),
+                                    widget.featuredAgents?.agents?[index].averageRating == 2 ?starIcon(Icons.star, 12) : SizedBox(),
+                                    widget.featuredAgents?.agents?[index].averageRating == 3 ?starIcon(Icons.star, 12) : SizedBox(),
+                                    widget.featuredAgents?.agents?[index].averageRating == 4 ?starIcon(Icons.star, 12) : SizedBox(),
+                                    widget.featuredAgents?.agents?[index].averageRating == 5 ?starIcon(Icons.star, 12) : SizedBox(),
                                   ],
                                 ),
                                 SizedBox(

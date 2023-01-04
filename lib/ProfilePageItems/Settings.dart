@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:budi/Common%20Fields/CircularIndicator.dart';
 import 'package:budi/Helpers/ToastMessage.dart';
 import 'package:budi/Login%20Section/ConfirmPassword.dart';
 import 'package:budi/Login%20Section/ForgotPassword.dart';
+import 'package:budi/Models/TermsAndConditionModel.dart';
 import 'package:budi/ProfilePageItems/TermsOfService.dart';
 import 'package:http/http.dart' as http;
 import 'package:budi/Helpers/AppIndicator.dart';
@@ -24,8 +26,13 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   bool isStreamed = true;
+  bool value = false;
+  final Color activeColor = AppColor.BUTTON_COLOR;
+  TermsAndConditionModel? termsOfUse;
+  PushNotificationModel? pushNotificationModel;
 
-  List<String> _names = [
+
+  final List<String> _names = [
     'Change email',
     'Change password',
     'Privacy',
@@ -44,13 +51,84 @@ class _SettingsState extends State<Settings> {
     Assets.icIntrest,
     Assets.icBag,
   ];
+
+  getEnableDisablePushNotification() async {
+    try {
+      SharedPreferences sharedPreferences =
+      await SharedPreferences.getInstance();
+      var token = sharedPreferences.getString('LogInToken');
+      final res = await http.get(
+          Uri.parse("http://74.208.150.111/api/user_details/"),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          });
+      final int statusCode = res.statusCode;
+      if (statusCode == 200) {
+        Map<String, dynamic> decoded = json.decode(res.body);
+        PushNotificationModel data = PushNotificationModel.fromJson(decoded);
+        pushNotificationModel = data;
+           value = pushNotificationModel!.userDetail!.pushNotifications!;
+           setState(() {});
+      } else {
+        print(statusCode);
+      }
+    } catch (exception) {
+      print("Please Check Internet");
+    }
+  }
+
+  enableDisableButton(String enableDisable) async {
+    SharedPreferences sharedPreferences =
+    await SharedPreferences.getInstance();
+    var token = sharedPreferences.getString('LogInToken');
+    try {
+      var params = {'':''
+      };
+      final url =
+      Uri.parse('http://74.208.150.111/api/user_details/$enableDisable');
+      var request = http.MultipartRequest(
+          'POST', url)..fields.addAll(params);
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+        'Content-Type': 'multipart/form-data'
+      });
+      var response = await request.send();
+      final respStr = await response.stream.bytesToString();
+      var encoded = json.decode(respStr);
+      final int statusCode = url.port;
+      if (response.statusCode == 200) {
+        PushNotificationModel data = PushNotificationModel.fromJson(encoded);
+        pushNotificationModel = data;
+        value = pushNotificationModel!.userDetail!.pushNotifications!;
+        sharedPreferences.setString("push_notifications",pushNotificationModel?.userDetail?.pushNotifications.toString() ?? "");
+        setState(() {});
+      } else {
+        // ToastMessage.message(data.message);
+        AppIndicator.disposeIndicator();
+        print(statusCode);
+      }
+    } catch (exception) {
+      AppIndicator.disposeIndicator();
+      print("Please Check Internet");
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    getEnableDisablePushNotification();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: signOutButton(),
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_back_rounded,
             size: 25,
           ),
@@ -68,18 +146,21 @@ class _SettingsState extends State<Settings> {
               fontSize: 16,
             )),
       ),
-      body: settingTabOptions(_names, logoOne),
+      body:
+      pushNotificationModel != null ?
+      settingTabOptions(_names, logoOne)
+          : circularIndicator(context),
     );
   }
 
   settingTabOptions(List<String> names, List<String> logo) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
       ),
       child: ListView.builder(
           shrinkWrap: true,
-          physics: BouncingScrollPhysics(),
+          physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.zero,
           itemCount: names.length,
           itemExtent: 60,
@@ -91,60 +172,71 @@ class _SettingsState extends State<Settings> {
               child: Column(
                 children: [
                   Container(
-                      margin: EdgeInsets.only(left: 18, right: 15),
+                      margin: const EdgeInsets.only(left: 18, right: 15),
                       color: Colors.white,
                       height: 55,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  height: 35,
-                                  width: 35,
-                                  padding: EdgeInsets.all(6.0),
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                      color: AppColor.BACKGROUND_COLOR
-                                          .withOpacity(0.5)),
-                                  child: Image.asset(
-                                    logo[index],
-                                    height: 25,
-                                    width: 25,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                height: 35,
+                                width: 35,
+                                padding: const EdgeInsets.all(6.0),
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    color: AppColor.BACKGROUND_COLOR
+                                        .withOpacity(0.5)),
+                                child: Image.asset(
+                                  logo[index],
+                                  height: 25,
+                                  width: 25,
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 8,
+                              ),
+                              Text(
+                                names[index],
+                                style: const TextStyle(
+                                    color: AppColor.GOOGLETEXT_COLOR,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          index == 3
+                              ? Container(
+                                  margin: const EdgeInsets.only(
+                                    bottom: 5,
                                   ),
+                                  height: 10,
+                                  child: Transform.scale(
+                                    scale: 0.8,
+                                    child: CupertinoSwitch(
+                                      activeColor: activeColor,
+                                      value: value,
+                                      onChanged: (v) {
+                                        if(v == false){
+                                          enableDisableButton('disable_push_notifications');
+                                        }else{
+                                          enableDisableButton('enable_push_notifications');
+                                        }
+                                        }),
+                                    // shaderCallback: (r) {
+                                    //   return LinearGradient(
+                                    //     colors: value
+                                    //         ? [activeColor, activeColor]
+                                    //         : [Colors.red, Colors.red],
+                                    //   ).createShader(r);
+                                    // },
+                                  ))
+                              : const Icon(
+                                  Icons.chevron_right,
+                                  color: AppColor.TEXT_COLOR,
                                 ),
-                                SizedBox(
-                                  width: 8,
-                                ),
-                                Text(
-                                  names[index],
-                                  style: TextStyle(
-                                      color:AppColor.GOOGLETEXT_COLOR,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                          index == 3 ? Container(
-                              margin: EdgeInsets.only(bottom: 5,),
-                              height: 10,
-                              child: Transform.scale(
-                                  scale: 0.8,
-                                  child: CupertinoSwitch(
-                                    activeColor: AppColor.BUTTON_COLOR,
-                                    value: isStreamed != null ? isStreamed : false,
-                                    onChanged: (bool value) {
-                                      setState(() {
-                                        isStreamed = value;
-                                      });
-                                    },
-                                  ))):Icon(
-                            Icons.chevron_right,
-                            color: AppColor.TEXT_COLOR,
-                          ),
                         ],
                       )),
                 ],
@@ -157,122 +249,41 @@ class _SettingsState extends State<Settings> {
   void onItemSelection(BuildContext context, int index) {
     if (index == 0) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => ForgotPassword(pageType: 'profile',)));
+          context,
+          MaterialPageRoute(
+              builder: (context) => ForgotPassword(
+                    pageType: 'profile',
+                  )));
     } else if (index == 1) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => ConfirmPassword(pageType: 'reset',)));
-    }else if (index == 2) {
+          context,
+          MaterialPageRoute(
+              builder: (context) => ConfirmPassword(
+                    pageType: 'reset',
+                  )));
+    } else if (index == 2) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => TermsOfService(title: 'Privacy Policy',pageType: 'Privacy',)));
-    }else if (index == 6) {
+          context,
+          MaterialPageRoute(
+              builder: (context) => TermsOfService(
+                    title: 'Privacy Policy',
+                    pageType: 'Privacy',
+                  )));
+    } else if (index == 6) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => ContactUs()));
+          context, MaterialPageRoute(builder: (context) => const ContactUs()));
     }
-    // else if (index == 2) {
-    //   navigationPush(context, MeetingListPage(), function: (v) {});
-    // } else if (profileType == 'Customer' ? index == 14 : index == 3) {
-    //   navigationPush(context, OrderThreeDFormPage(), function: (v) {});
-    // } else if (profileType == 'Customer' ? index == 15 : index == 4) {
-    //   navigationPush(context, HomesInfraPricePackage(), function: (v) {});
-    // } else if (profileType == 'Customer' ? index == 3 : index == 16) {
-    //   navigationPush(
-    //       context,
-    //       InAppWebViewExampleScreen(
-    //         virtualReality: true,
-    //         title: 'Virtual Reality',
-    //       ),
-    //       function: (v) {});
-    // } else if (profileType == 'Architect' || profileType == 'Interior Designer'
-    //     ? index == 5
-    //     : index == 4) {
-    //   navigationPush(
-    //       context,
-    //       ResetPassword(
-    //         userMobile: userInfoModel!.userInformation!.mobile!,
-    //         isProfile: true,
-    //       ),
-    //       function: (v) {});
-    // } else if (profileType == 'Architect' || profileType == 'Interior Designer'
-    //     ? index == 6
-    //     : index == 5) {
-    //   navigationPush(
-    //       context,
-    //       InAppWebViewExampleScreen(
-    //         title: StringConstant.termsAndTheCondition,
-    //       ),
-    //       function: (v) {});
-    //   // navigationPush(
-    //   //     context,
-    //   //     TermsAndConditionsPage(
-    //   //       titleAppBar: StringConstant.termsAndTheCondition,
-    //   //       pageType: StringConstant.terms,
-    //   //     ),
-    //   //     function: (v) {});
-    // } else if (profileType == 'Architect' || profileType == 'Interior Designer'
-    //     ? index == 7
-    //     : index == 6) {
-    //   navigationPush(
-    //       context,
-    //       InAppWebViewExampleScreen(
-    //         aboutUs: false,
-    //         title: StringConstant.privacyOfPolicy,
-    //       ),
-    //       function: (v) {});
-    //   // navigationPush(
-    //   //     context,
-    //   //     TermsAndConditionsPage(
-    //   //       titleAppBar: StringConstant.privacyandPolicy,
-    //   //       pageType: StringConstant.privacyOfPolicy,
-    //   //     ),
-    //   //     function: (v) {});
-    // } else if (profileType == 'Architect' || profileType == 'Interior Designer'
-    //     ? index == 8
-    //     : index == 7) {
-    //   showReplyDialog(context, feedbackController, onTap: () {
-    //     Navigator.of(context, rootNavigator: true).pop();
-    //     AppNetworkManager.deleteUserAccount(context, (result, isSuccess) {
-    //       if (isSuccess == true) {
-    //         logoutButtonPressed(context);
-    //       }
-    //     });
-    //   });
-    // } else if (profileType == 'Architect' || profileType == 'Interior Designer'
-    //     ? index == 9
-    //     : index == 8) {
-    //   navigationPush(
-    //       context,
-    //       InAppWebViewExampleScreen(
-    //         aboutUs: true,
-    //         title: StringConstant.aboutUs,
-    //       ),
-    //       function: (v) {});
-    //   // navigationPush(
-    //   //     context,
-    //   //     TermsAndConditionsPage(
-    //   //         titleAppBar: StringConstant.aboutUs,
-    //   //         pageType: StringConstant.aboutus),
-    //   //     function: (v) {});
-    // } else if (profileType == 'Architect' || profileType == 'Interior Designer'
-    //     ? index == 10
-    //     : index == 9) {
-    //   logoutButtonPressed(context);
-    // } else if (profileType == 'Architect' || profileType == 'Interior Designer'
-    //     ? index == 0
-    //     : index == 11) {
-    //   navigationPush(context, ThreeDList(), function: (v) {});
-    // }
   }
 
   logoutEveryWhere() async {
     try {
-      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      SharedPreferences sharedPreferences =
+          await SharedPreferences.getInstance();
       var token = sharedPreferences.getString('LogInToken');
       var params = {"": ""};
       AppIndicator.loadingIndicator();
-      final url =
-      Uri.parse('http://74.208.150.111/api/logout_everywhere');
-      var request = http.MultipartRequest(
-          'POST', url)..fields.addAll(params);
+      final url = Uri.parse('http://74.208.150.111/api/logout_everywhere');
+      var request = http.MultipartRequest('POST', url)..fields.addAll(params);
       request.headers.addAll({
         'Authorization': 'Bearer ${token!}',
         'Accept': 'application/json',
@@ -287,7 +298,7 @@ class _SettingsState extends State<Settings> {
         ApiResultModel? statusMessage;
         AppIndicator.disposeIndicator();
         statusMessage = data;
-        SharedPreferenceManager.deleteSavedDetails(context,data.message!);
+        SharedPreferenceManager.deleteSavedDetails(context, data.message!);
         setState(() {});
       } else {
         ToastMessage.message(data.message);
@@ -304,7 +315,7 @@ class _SettingsState extends State<Settings> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0, left: 15),
       child: GestureDetector(
-        onTap: (){
+        onTap: () {
           logoutEveryWhere();
         },
         child: Row(
@@ -314,7 +325,7 @@ class _SettingsState extends State<Settings> {
             Container(
               height: 35,
               width: 35,
-              padding: EdgeInsets.all(6.0),
+              padding: const EdgeInsets.all(6.0),
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10.0),
                   color: AppColor.BACKGROUND_COLOR.withOpacity(0.5)),
@@ -324,10 +335,10 @@ class _SettingsState extends State<Settings> {
                 width: 25,
               ),
             ),
-            SizedBox(
+            const SizedBox(
               width: 8,
             ),
-            Text(
+            const Text(
               'Sign Out',
               style: TextStyle(
                   color: AppColor.RED_COLOR, fontWeight: FontWeight.bold),
@@ -337,5 +348,4 @@ class _SettingsState extends State<Settings> {
       ),
     );
   }
-
 }

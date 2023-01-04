@@ -3,6 +3,7 @@ import 'package:budi/BottomNavigation.dart';
 import 'package:budi/Common%20Fields/AppButton.dart';
 import 'package:budi/Common%20Fields/AppTextField.dart';
 import 'package:budi/Common%20Fields/SocialLoginButton.dart';
+import 'package:budi/Common%20Fields/SocialLoginManager.dart';
 import 'package:budi/Helpers/AppIndicator.dart';
 import 'package:budi/Helpers/ToastMessage.dart';
 import 'package:budi/LoginManager/SharedPreferenceManager.dart';
@@ -101,10 +102,11 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => BottomNavigation()));
+                      Navigator.pop(context);
+                      // Navigator.push(
+                      //     context,
+                      //     MaterialPageRoute(
+                      //         builder: (context) => BottomNavigation()));
                     },
                     child: const Text(
                       ' Sign In',
@@ -124,7 +126,9 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
               ),
               SocialLoginButton(
-                googlePressed: () {},
+                googlePressed: () {
+                  SocialLoginManager.loginWithGoogle(context);
+                },
                 facebookPressed: () {},
               ),
               const SizedBox(
@@ -163,7 +167,7 @@ class _SignUpPageState extends State<SignUpPage> {
         AppIndicator.disposeIndicator();
         SharedPreferenceManager.getInstance.updateUserDetails(userInfoModel!);
         Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => BottomNavigation()),
+            MaterialPageRoute(builder: (context) => BottomNavigation(userInfoModel: userInfoModel,)),
             (Route<dynamic> route) => false);
         ToastMessage.message(data.message);
         setState(() {});

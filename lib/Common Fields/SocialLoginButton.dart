@@ -50,7 +50,7 @@ class _SocialLoginButtonState extends State<SocialLoginButton> {
               height: 25,
               width: 25,
             ),
-            SizedBox(
+            const SizedBox(
               width: 10,
             ),
             Text(

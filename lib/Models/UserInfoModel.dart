@@ -1,14 +1,21 @@
+import 'package:budi/Models/ProfileDetailModel.dart';
+
 class UserInfoModel {
   String? message;
   String? token;
   User? user;
+  String? deviceId;
+  bool? pushNotifications;
 
-  UserInfoModel({this.message, this.token, this.user});
+  UserInfoModel({this.message, this.token, this.user,this.deviceId,
+    this.pushNotifications});
 
   UserInfoModel.fromJson(Map<String, dynamic> json) {
     message = json['message'];
     token = json['token'];
-    user = json['user'] != null ? new User.fromJson(json['user']) : null;
+    user = json['user'] != null ? User.fromJson(json['user']) : null;
+    deviceId = json['device_id'];
+    pushNotifications = json['push_notifications'];
   }
 
   Map<String, dynamic> toJson() {
@@ -18,6 +25,8 @@ class UserInfoModel {
     if (this.user != null) {
       data['user'] = this.user!.toJson();
     }
+    data['device_id'] = this.deviceId;
+    data['push_notifications'] = this.pushNotifications;
     return data;
   }
 }
@@ -29,9 +38,10 @@ class User {
   String? emailVerifiedAt;
   String? createdAt;
   String? updatedAt;
-  String? averageRating;
+  int? averageRating;
   List<Roles>? roles;
   List<AgentReviews>? agentReviews;
+  Profile? profile;
 
   User(
       {this.id,
@@ -42,7 +52,7 @@ class User {
         this.updatedAt,
         this.averageRating,
         this.roles,
-        this.agentReviews});
+        this.agentReviews,this.profile});
 
   User.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -64,6 +74,8 @@ class User {
         agentReviews!.add(new AgentReviews.fromJson(v));
       });
     }
+    profile =
+    json['profile'] != null ? new Profile.fromJson(json['profile']) : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -82,28 +94,55 @@ class User {
       data['agent_reviews'] =
           this.agentReviews!.map((v) => v.toJson()).toList();
     }
+    if (this.profile != null) {
+      data['profile'] = this.profile!.toJson();
+    }
     return data;
   }
 }
 
 
 class AgentReviews {
+  String? title;
+  String? body;
+  int? rating;
+  int? agentId;
+  int? userId;
+  String? updatedAt;
+  String? createdAt;
   int? id;
-  String? name;
 
   AgentReviews(
-      {this.id,
-        this.name});
+      {this.title,
+        this.body,
+        this.rating,
+        this.agentId,
+        this.userId,
+        this.updatedAt,
+        this.createdAt,
+        this.id});
 
   AgentReviews.fromJson(Map<String, dynamic> json) {
+    title = json['title'];
+    body = json['body'];
+    rating = json['rating'];
+    agentId = json['agent_id'];
+    userId = json['user_id'];
+    updatedAt = json['updated_at'];
+    createdAt = json['created_at'];
     id = json['id'];
-    name = json['name'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['title'] = this.title;
+    data['body'] = this.body;
+    data['rating'] = this.rating;
+    data['agent_id'] = this.agentId;
+    data['user_id'] = this.userId;
+    data['updated_at'] = this.updatedAt;
+    data['created_at'] = this.createdAt;
     data['id'] = this.id;
-    data['name'] = this.name;
     return data;
   }
 }

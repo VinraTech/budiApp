@@ -1,10 +1,17 @@
+import 'dart:convert';
+import 'package:budi/AgentSection/AgentsProfile.dart';
+import 'package:budi/Common%20Fields/CircularIndicator.dart';
+import 'package:budi/Helpers/AppIndicator.dart';
+import 'package:http/http.dart' as http;
 import 'package:budi/Common%20Fields/AppButton.dart';
 import 'package:budi/Common%20Fields/AppTextField.dart';
+import 'package:budi/Models/FeaturedAgentsModel.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
 import 'package:budi/Utilities/TextHelper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 bool isStreamed = true;
 
@@ -19,14 +26,75 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   TextEditingController searchController = TextEditingController();
+  FeaturedAgentsModel? featuredAgents;
 
+  getFeaturedAgents() async {
+    try {
+      SharedPreferences sharedPreferences =
+      await SharedPreferences.getInstance();
+      var token = sharedPreferences.getString('LogInToken');
+      var userId = sharedPreferences.getString('UserId');
+      final res = await http
+          .get(Uri.parse("http://74.208.150.111/api/users/featured_agents"), headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      });
+      final int statusCode = res.statusCode;
+      if (statusCode == 200) {
+        Map<String, dynamic> decoded = json.decode(res.body);
+        FeaturedAgentsModel data = FeaturedAgentsModel.fromJson(decoded);
+        featuredAgents = data;
+        setState(() {});
+      } else {
+        print(statusCode);
+      }
+    } catch (exception) {
+      print("Please Check Internet");
+    }
+  }
+
+  searchAgents(String query) async {
+    AppIndicator.loadingIndicator();
+    try {
+      SharedPreferences sharedPreferences =
+      await SharedPreferences.getInstance();
+      var token = sharedPreferences.getString('LogInToken');
+      var userId = sharedPreferences.getString('UserId');
+      final res = await http
+          .get(Uri.parse("http://74.208.150.111/api/users/search_agent?name=$query"), headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      });
+      final int statusCode = res.statusCode;
+      if (statusCode == 200) {
+        featuredAgents = null;
+        Map<String, dynamic> decoded = json.decode(res.body);
+        FeaturedAgentsModel data = FeaturedAgentsModel.fromJson(decoded);
+        AppIndicator.disposeIndicator();
+        featuredAgents = data;
+        setState(() {});
+      } else {
+        print(statusCode);
+      }
+    } catch (exception) {
+      print("Please Check Internet");
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    getFeaturedAgents();
+    super.initState();
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: AppColor.OFF_WHITE_COLOR,
-        body: SingleChildScrollView(
+        body: featuredAgents != null ? SingleChildScrollView(
           child: Column(children: [
-            SizedBox(
+            const SizedBox(
               height: 60,
             ),
             AppTextField(
@@ -36,8 +104,12 @@ class _SearchPageState extends State<SearchPage> {
               enable: true,
               isSearch: true,
               controller: searchController,
+              onChanged: (m){},
+              onSubmitted: (m){
+                m.isNotEmpty ? searchAgents(m): null;
+              },
               onFilterTap: (){
-                showDialogue();
+                // showDialogue();
               },
             ),
             Container(
@@ -45,75 +117,85 @@ class _SearchPageState extends State<SearchPage> {
                     ? MediaQuery.of(context).size.height * 0.76
                     : MediaQuery.of(context).size.height - 150,
                 width: MediaQuery.of(context).size.width,
-                margin: EdgeInsets.only(left: 15, right: 15),
+                margin: const EdgeInsets.only(left: 15, right: 15),
                 child: GridView.builder(
-                  itemCount: 20,
+                  itemCount: featuredAgents?.agents?.length,
                   padding: const EdgeInsets.all(0.0),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 153 / 180,
+                    childAspectRatio: 153 / 185,
                     crossAxisSpacing: 10.0,
                     mainAxisSpacing: 10.0,
                   ),
                   itemBuilder: (BuildContext context, int index) {
-                    return Container(
-                      width: 163,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15)),
-                      child: Card(
-                        elevation: 3,
-                        child: Column(
-                          children: [
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Stack(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: Colors.greenAccent[400],
-                                  radius: 30,
-                                  child: Image.asset(
-                                      'assets/images/Image.png'), //Text
-                                ),
-                                Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: Image.asset(
-                                      Assets.icVerified,
-                                      height: 16,
-                                      width: 16,
-                                    ))
-                              ],
-                            ),
-                            SizedBox(
-                              height: 6,
-                            ),
-                            textView('Alex Buckmaster', 16, AppColor.HOMETEXT),
-                            SizedBox(
-                              height: 6,
-                            ),
-                            textView('14 projects', 12, AppColor.TEXT_COLOR),
-                            SizedBox(
-                              height: 6,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                starIcon(Icons.star, 12),
-                                starIcon(Icons.star, 12),
-                                starIcon(Icons.star, 12),
-                                starIcon(Icons.star, 12),
-                                starIcon(Icons.star, 12),
-                              ],
-                            ),
-                            SizedBox(
-                              height: 6,
-                            ),
-                            textView(
-                                'At vero eos et \n accusamus et iusto \n odio',
-                                12,
-                                AppColor.HOMETEXT)
-                          ],
+                    return GestureDetector(
+                      onTap: (){
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    AgentsProfilePage(
+                                        user: featuredAgents?.agents?[index])));
+                      },
+                      child: Container(
+                        width: 163,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15)),
+                        child: Card(
+                          elevation: 3,
+                          child: Column(
+                            children: [
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              Stack(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: Colors.greenAccent[400],
+                                    radius: 30,
+                                    backgroundImage: NetworkImage(
+                                        featuredAgents?.agents?[index].profile?.profilePicture ?? ''),//Text
+                                  ),
+                                  Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: Image.asset(
+                                        Assets.icVerified,
+                                        height: 16,
+                                        width: 16,
+                                      ))
+                                ],
+                              ),
+                              const SizedBox(
+                                height: 6,
+                              ),
+                              textView( featuredAgents?.agents?[index].name ?? '', 16, AppColor.HOMETEXT),
+                              const SizedBox(
+                                height: 6,
+                              ),
+                              textView('14 projects', 12, AppColor.TEXT_COLOR),
+                              const SizedBox(
+                                height: 6,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  starIcon(Icons.star, 12),
+                                  starIcon(Icons.star, 12),
+                                  starIcon(Icons.star, 12),
+                                  starIcon(Icons.star, 12),
+                                  starIcon(Icons.star, 12),
+                                ],
+                              ),
+                              const SizedBox(
+                                height: 6,
+                              ),
+                              textView(
+                                  'At vero eos et \n accusamus et iusto \n odio',
+                                  12,
+                                  AppColor.HOMETEXT)
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -121,7 +203,7 @@ class _SearchPageState extends State<SearchPage> {
                   },
                 ))
           ]),
-        ));
+        ): circularIndicator(context));
   }
 
   textView(String lable, double fontSize, Color colors) {
@@ -146,14 +228,14 @@ class _SearchPageState extends State<SearchPage> {
         builder: (ctxDialog) => 
             SingleChildScrollView(
                 child: Padding(
-                    padding: EdgeInsets.only(top: 100.0),
+                    padding: const EdgeInsets.only(top: 100.0),
                     child: AlertDialog(
                       content: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            margin: EdgeInsets.only(left: 10),
+                            margin: const EdgeInsets.only(left: 10),
                               width: 80,
                               child: getRegularStyleText(
                                   msg: 'Radius',
@@ -161,7 +243,7 @@ class _SearchPageState extends State<SearchPage> {
                                   fontSize: 14,
                                   textAlign: TextAlign.left)),
                           Container(
-                              margin: EdgeInsets.only(left: 10),
+                              margin: const EdgeInsets.only(left: 10),
                               width: 80,
                               child: getSemiBoldText(
                                   msg: '5 Km',
@@ -169,12 +251,12 @@ class _SearchPageState extends State<SearchPage> {
                                   fontSize: 14,
                                   textAlign: TextAlign.left)),
                           Container(
-                            margin: EdgeInsets.only(left: 10,),
+                            margin: const EdgeInsets.only(left: 10,),
                             height: 1,
                             width: 130,
                             color:AppColor.SIGNIN_COLOR,
                           ),
-                          SizedBox(height: 10,),
+                          const SizedBox(height: 10,),
                           budiBasics(context,setState),
                           budiBasics(context,setState),
                           budiBasics(context,setState),
@@ -201,14 +283,14 @@ class _SearchPageState extends State<SearchPage> {
   Widget budiBasics(
       BuildContext? context, void Function(VoidCallback fn) setState) {
     return Container(
-      margin: EdgeInsets.only(top: 8),
+      margin: const EdgeInsets.only(top: 8),
       width: 320,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-              margin: EdgeInsets.only(bottom: 8,),
+              margin: const EdgeInsets.only(bottom: 8,),
               height: 8,
               child: Transform.scale(
                   scale: 0.6,
@@ -222,16 +304,16 @@ class _SearchPageState extends State<SearchPage> {
                     },
                   ))),
           Container(
-            margin: EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: 8),
               width: 80,
               child: getSemiBoldText(
                   msg: 'Budi Basic',
                   color: AppColor.SIGNIN_COLOR,
                   fontSize: 14,
                   textAlign: TextAlign.left)),
-          SizedBox(width: 45,),
+          const SizedBox(width: 45,),
           Container(
-            margin: EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: 8),
               width: 80,
               child: getRegularStyleText(
                   msg: '332 offers',

@@ -10,6 +10,8 @@ class AppTextField extends StatefulWidget {
   bool? isSearch;
   bool? enable;
   VoidCallback? onFilterTap;
+  ValueChanged<String>? onChanged;
+  ValueChanged<String>? onSubmitted;
 
   AppTextField(
       {Key? key,
@@ -19,6 +21,8 @@ class AppTextField extends StatefulWidget {
       this.obscureText,
       this.isSearch,
       this.enable,
+        this.onChanged,
+        this.onSubmitted,
       this.onFilterTap})
       : super(key: key);
 
@@ -39,6 +43,8 @@ class _AppTextFieldState extends State<AppTextField> {
           obscureText: widget.obscureText!,
           enabled: widget.enable!,
           controller: widget.controller,
+          onChanged: widget.onChanged,
+          onSubmitted: widget.onSubmitted,
           decoration: InputDecoration(
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10.0),

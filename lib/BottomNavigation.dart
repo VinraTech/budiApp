@@ -3,14 +3,16 @@ import 'package:budi/BottomNavigationScreens/HomePage.dart';
 import 'package:budi/BottomNavigationScreens/PercentPage.dart';
 import 'package:budi/BottomNavigationScreens/ProfilePage.dart';
 import 'package:budi/BottomNavigationScreens/SearchPage.dart';
+import 'package:budi/Models/UserInfoModel.dart';
 import 'package:budi/Utilities/Assets.dart';
 import 'package:flutter/material.dart';
 
 
 class BottomNavigation extends StatefulWidget {
   int? index = 0;
+  UserInfoModel? userInfoModel;
 
-  BottomNavigation({Key? key, this.index}) : super(key: key);
+  BottomNavigation({Key? key, this.index,this.userInfoModel}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -31,7 +33,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
     super.initState();
     _currentPageIndex = 0;
     setState(() {
-      _pages.add(HomePage());
+      _pages.add(HomePage(userInfoModel: widget.userInfoModel,));
       _pages.add(SearchPage(isHome: false));
       _pages.add(AgentPage());
       _pages.add(PercentPage());

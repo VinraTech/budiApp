@@ -138,8 +138,8 @@ class _TermsOfServiceState extends State<TermsOfService> {
                 padding: const EdgeInsets.all(15),
                 child: getRegularStyleText(
                     msg: widget.pageType == 'terms'
-                        ? termsOfUse?.tAndC
-                        : termsOfUse?.privacy_policy))
+                        ? termsOfUse?.tAndC?.content ?? ''
+                        : termsOfUse?.privacyPolicy?.content ?? ''))
             : circularIndicator(context));
   }
 }

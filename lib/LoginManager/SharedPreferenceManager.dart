@@ -46,6 +46,8 @@ class SharedPreferenceManager {
     sharedPreferences.setString("name", userInfoModel.user?.name ?? "");
     sharedPreferences.setString("userEmail", userInfoModel.user?.email ?? "");
     sharedPreferences.setString("roles", userInfoModel.user?.roles?[0].name ?? "");
+    sharedPreferences.setString("push_notifications", userInfoModel.pushNotifications.toString() ?? "");
+    sharedPreferences.setString("profile_picture", userInfoModel.user?.profile?.profilePicture ?? "");
     if (userInfoModel.token != null) {
       sharedPreferences.setString("LogInToken", userInfoModel.token!);
     }

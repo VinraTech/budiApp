@@ -163,7 +163,7 @@ class _LoginPageState extends State<LoginPage> {
         SharedPreferenceManager.getInstance.updateUserDetails(userInfoModel!);
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
-                builder: (context) => BottomNavigation()),
+                builder: (context) => BottomNavigation(userInfoModel: userInfoModel,)),
                 (Route<dynamic> route) => false);
         setState(() {});
       } else {

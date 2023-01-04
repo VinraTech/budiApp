@@ -1,8 +1,14 @@
+import 'dart:convert';
+import 'package:budi/Helpers/AppIndicator.dart';
+import 'package:budi/Helpers/ToastMessage.dart';
+import 'package:budi/Models/ContactUsModel.dart';
+import 'package:http/http.dart' as http;
 import 'package:budi/Common%20Fields/AppButton.dart';
 import 'package:budi/HomePageItems/PaymentDonePage.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/TextHelper.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ContactUs extends StatefulWidget {
   const ContactUs({Key? key}) : super(key: key);
@@ -13,6 +19,8 @@ class ContactUs extends StatefulWidget {
 
 class _ContactUsState extends State<ContactUs> {
   String? dropdownValue;
+  TextEditingController subjectController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
 
   List<String> list = <String>[
     'User Experience',
@@ -32,18 +40,20 @@ class _ContactUsState extends State<ContactUs> {
           color: AppColor.BUTTON_COLOR,
           label: 'Submit',
           onTap: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => PaymentDone(
-                          contactUs: true,
-                        )));
+            dropdownValue == null ||
+                    subjectController == '' ||
+                    descriptionController == ''
+                ? ToastMessage.message('All Fields Are Required')
+                : contactSubmitPressed(
+                    dropdownValue ?? '',
+                    subjectController.text ?? '',
+                    descriptionController.text ?? '');
           },
         ),
       ),
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_back_rounded,
             size: 25,
           ),
@@ -70,8 +80,8 @@ class _ContactUsState extends State<ContactUs> {
   billInfo() {
     return Container(
       color: Colors.white,
-      margin: EdgeInsets.all(15.0),
-      padding: EdgeInsets.all(15.0),
+      margin: const EdgeInsets.all(15.0),
+      padding: const EdgeInsets.all(15.0),
       width: MediaQuery.of(context).size.width,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -81,32 +91,33 @@ class _ContactUsState extends State<ContactUs> {
               msg: 'Your current Budi App balance is',
               fontSize: 16,
               color: AppColor.SIGNIN_COLOR),
-          SizedBox(
+          const SizedBox(
             height: 8,
           ),
           dropDownField(),
-          SizedBox(
+          const SizedBox(
             height: 8,
           ),
-          textField('Subject'),
-          SizedBox(
+          textField('Subject', subjectController),
+          const SizedBox(
             height: 8,
           ),
-          textField('Type Here'),
+          textField('Type Here', descriptionController),
         ],
       ),
     );
   }
 
-  textField(String hint) {
+  textField(String hint, TextEditingController textController) {
     return Container(
-      padding: EdgeInsets.all(6),
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
         border: Border.all(color: AppColor.TEXT_COLOR.withOpacity(0.4)),
         color: AppColor.BACKGROUND_COLOR.withOpacity(0.5),
       ),
       child: TextField(
+        controller: textController,
         decoration: InputDecoration(
             border: InputBorder.none,
             hintText: hint,
@@ -117,7 +128,7 @@ class _ContactUsState extends State<ContactUs> {
 
   dropDownField() {
     return Container(
-      padding: EdgeInsets.all(6),
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
         border: Border.all(color: AppColor.TEXT_COLOR.withOpacity(0.4)),
@@ -127,9 +138,9 @@ class _ContactUsState extends State<ContactUs> {
         value: dropdownValue,
         isExpanded: true,
         elevation: 16,
-        hint: Text('Select topic'),
+        hint: const Text('Select topic'),
         style: const TextStyle(color: Colors.black),
-        underline: SizedBox(),
+        underline: const SizedBox(),
         onChanged: (String? value) {
           setState(() {
             dropdownValue = value!;
@@ -143,5 +154,52 @@ class _ContactUsState extends State<ContactUs> {
         }).toList(),
       ),
     );
+  }
+
+  contactSubmitPressed(String dropDownValue, String subjectValue,
+      String descriptionValue) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    var token = sharedPreferences.getString('LogInToken');
+    try {
+      var params = {
+        'topic': dropDownValue,
+        'subject': subjectValue,
+        'message': descriptionValue
+      };
+      final url = Uri.parse('http://74.208.150.111/api/support/contact_us');
+      var request = http.MultipartRequest('POST', url)..fields.addAll(params);
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+        'Content-Type': 'multipart/form-data'
+      });
+      var response = await request.send();
+      final respStr = await response.stream.bytesToString();
+      var encoded = json.decode(respStr);
+      final int statusCode = url.port;
+      ContactUsModel data = ContactUsModel.fromJson(encoded);
+      if (response.statusCode == 200) {
+        dropdownValue = null;
+        subjectController.clear();
+        descriptionController.clear();
+        AppIndicator.disposeIndicator();
+        ContactUsModel? apiResultModel;
+        apiResultModel = data;
+        ToastMessage.message(data.message);
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => PaymentDone(
+                      contactUs: true,
+                    )));
+      } else {
+        ToastMessage.message(data.message);
+        AppIndicator.disposeIndicator();
+        print(statusCode);
+      }
+    } catch (exception) {
+      AppIndicator.disposeIndicator();
+      print("Please Check Internet");
+    }
   }
 }
