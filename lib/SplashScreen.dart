@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:budi/BottomNavigation.dart';
+import 'package:budi/BottomNavigationScreens/ProfilePage.dart';
 import 'package:budi/Login%20Section/UserSelectionPage.dart';
 import 'package:budi/Utilities/AppColor.dart';
 import 'package:budi/Utilities/Assets.dart';
@@ -30,7 +31,9 @@ class _SplashScreenState extends State<SplashScreen> {
       decoration: BoxDecoration(
         color: AppColor.OFF_WHITE_COLOR,
         image: DecorationImage(
-          image: AssetImage(Assets.icLogo,),
+          image: AssetImage(
+            Assets.icLogo,
+          ),
           // fit: BoxFit.fill,
           alignment: Alignment.center,
         ),
@@ -41,12 +44,18 @@ class _SplashScreenState extends State<SplashScreen> {
   void navigation() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     var isEmail = sharedPreferences.getString('userEmail');
+    var roleType = sharedPreferences.getString('roles');
     if (isEmail != null) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (BuildContext context) => BottomNavigation(),
-        ),
-      );
+      if (roleType == 'agent') {
+        Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) =>
+            ProfilePage()), (Route<dynamic> route) => false);
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (BuildContext context) => BottomNavigation(),
+          ),
+        );
+      }
     } else {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:budi/BottomNavigation.dart';
+import 'package:budi/BottomNavigationScreens/ProfilePage.dart';
 import 'package:budi/Common%20Fields/AppButton.dart';
 import 'package:budi/Common%20Fields/AppTextField.dart';
 import 'package:budi/Common%20Fields/SocialLoginButton.dart';
@@ -166,9 +167,18 @@ class _SignUpPageState extends State<SignUpPage> {
         userInfoModel = data;
         AppIndicator.disposeIndicator();
         SharedPreferenceManager.getInstance.updateUserDetails(userInfoModel!);
-        Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => BottomNavigation(userInfoModel: userInfoModel,)),
-            (Route<dynamic> route) => false);
+        if (userInfoModel?.user?.roles?[0].name == 'agent') {
+          Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => ProfilePage()),
+              (Route<dynamic> route) => false);
+        } else {
+          Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                  builder: (context) => BottomNavigation(
+                        userInfoModel: userInfoModel,
+                      )),
+              (Route<dynamic> route) => false);
+        }
         ToastMessage.message(data.message);
         setState(() {});
       } else {

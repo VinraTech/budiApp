@@ -1,6 +1,10 @@
 import 'dart:convert';
+import 'package:budi/AgentSection/CreateOfferPage.dart';
+import 'package:budi/Chat/ChatList.dart';
+import 'package:budi/Common%20Fields/AppButton.dart';
 import 'package:budi/Common%20Fields/CircularIndicator.dart';
 import 'package:budi/Models/ProfileDetailModel.dart';
+import 'package:budi/ProfilePageItems/ContactUs.dart';
 import 'package:budi/ProfilePageItems/EditProfilePage.dart';
 import 'package:http/http.dart' as http;
 import 'package:budi/Helpers/AppIndicator.dart';
@@ -29,8 +33,9 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   ProfileDetailModel? profileDetailModel;
+  String? userEmail, roleType;
 
-  List<String> _names = [
+  final List<String> _names = [
     'BUDI App Balance',
     'BUDI tokens',
     'BUDI points',
@@ -49,7 +54,7 @@ class _ProfilePageState extends State<ProfilePage> {
     'Sign Out',
   ];
 
-  List<String> logoOne = [
+  List<String> userlogo = [
     Assets.icCreditCard,
     Assets.icTokens,
     Assets.icPoints,
@@ -68,10 +73,34 @@ class _ProfilePageState extends State<ProfilePage> {
     Assets.icLogout,
   ];
 
+  List<String> agentProfileItemNames = [
+    'Add Budi Trip Offering',
+    'Agent Package List',
+    'Deals of the Day',
+    'Unique Services offered',
+    'Notification',
+    'Help',
+    'Contact Us',
+    'Settings',
+    'Terms & Condition',
+  ];
+
+  List<String> agentlogo = [
+    Assets.icIntrest,
+    Assets.icReviews,
+    Assets.icUmbrella,
+    Assets.ic_EmailIcon,
+    Assets.icNotification,
+    Assets.icIntrest,
+    Assets.icBag,
+    Assets.icSetting,
+    Assets.icArticle,
+  ];
+
   Future<void> getProfileDetails() async {
     try {
       SharedPreferences sharedPreferences =
-      await SharedPreferences.getInstance();
+          await SharedPreferences.getInstance();
       var token = sharedPreferences.getString('LogInToken');
       final res = await http
           .get(Uri.parse("http://74.208.150.111/api/profile/show"), headers: {
@@ -92,8 +121,15 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  getLoggedInUserDetails() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    userEmail = sharedPreferences.getString('userEmail');
+    roleType = sharedPreferences.getString('roles');
+  }
+
   @override
   void initState() {
+    getLoggedInUserDetails();
     getProfileDetails();
     // TODO: implement initState
     super.initState();
@@ -102,6 +138,24 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
+      resizeToAvoidBottomInset: false,
+      floatingActionButton: roleType == 'user' || roleType == null
+          ? SizedBox()
+          : Container(
+              child: FloatingActionButton(
+                elevation: 1,
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const CreateOferPage()));
+                },
+                backgroundColor: AppColor.BUTTON_COLOR,
+                child: Icon(Icons.add),
+              ),
+            ),
       backgroundColor: AppColor.OFF_WHITE_COLOR,
       appBar: AppBar(
         // leading: IconButton(
@@ -117,120 +171,149 @@ class _ProfilePageState extends State<ProfilePage> {
         title: Container(
             alignment: Alignment.center,
             // width: MediaQuery.of(context).size.width / 1.5,
-            width: MediaQuery
-                .of(context)
-                .size
-                .width,
+            width: MediaQuery.of(context).size.width,
             child: getSemiBoldText(
               msg: 'Profile',
               color: Colors.white,
               fontSize: 16,
             )),
       ),
-      body: profileDetailModel != null
+      body: profileDetailModel != null && roleType != null && userEmail != null
           ? SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              children: [
-                Container(
-                  padding: EdgeInsets.only(top: 25),
-                  width: MediaQuery
-                      .of(context)
-                      .size
-                      .width,
-                  height: 220,
-                  color: Colors.white,
-                  child: Column(
+              child: Column(
+                children: [
+                  Stack(
                     children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundImage: NetworkImage(
-                            profileDetailModel?.profile?.profilePicture ??
-                                ''),
+                      Container(
+                        padding: const EdgeInsets.only(top: 25),
+                        width: MediaQuery.of(context).size.width,
+                        height: roleType == 'user' ? 220 : 305,
+                        color: Colors.white,
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              radius: roleType == 'user' ? 50 : 38,
+                              backgroundImage: NetworkImage(
+                                  profileDetailModel?.profile?.profilePicture ??
+                                      ''),
+                            ),
+                            const SizedBox(
+                              height: 6,
+                            ),
+                            Text(
+                              profileDetailModel?.profile?.user?.name ?? '',
+                              style: const TextStyle(
+                                  color: AppColor.SIGNIN_COLOR, fontSize: 16),
+                            ),
+                            const SizedBox(
+                              height: 6,
+                            ),
+                            roleType == 'user'
+                                ? SizedBox()
+                                : Text(
+                                    userEmail ?? '',
+                                    style: const TextStyle(
+                                        color: AppColor.SIGNIN_COLOR,
+                                        fontSize: 16),
+                                  ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            roleType == 'user'
+                                ? SizedBox()
+                                : messageAndDashboardButton(),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            roleType == 'user'
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      shareIconView(Assets.icinstagramIcon, () {
+                                        _launchURL(profileDetailModel
+                                                ?.profile?.instagramHandle ??
+                                            ' ');
+                                      }),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      shareIconView(Assets.icTikTokIcon, () {
+                                        _launchURL(profileDetailModel
+                                                ?.profile?.tiktokHandle ??
+                                            ' ');
+                                      }),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      shareIconView(Assets.icBlackFacebookIcon,
+                                          () {
+                                        _launchURL(profileDetailModel
+                                                ?.profile?.facebookHandle ??
+                                            ' ');
+                                      }),
+                                    ],
+                                  )
+                                : Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      boxView('17', 'projects', 20),
+                                      boxView('6', 'Offers', 20),
+                                      boxView('100+', ' completed', 20),
+                                    ],
+                                  ),
+                          ],
+                        ),
                       ),
-                      SizedBox(
-                        height: 6,
-                      ),
-                      Text(
-                        profileDetailModel?.profile?.user?.name ?? '',
-                        style: TextStyle(
-                            color: AppColor.SIGNIN_COLOR, fontSize: 16),
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          shareIconView(Assets.icinstagramIcon, () {
-                            _launchURL(profileDetailModel
-                                ?.profile?.instagramHandle ??
-                                ' ');
-                          }),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          shareIconView(Assets.icTikTokIcon, () {
-                            _launchURL(profileDetailModel
-                                ?.profile?.tiktokHandle ??
-                                ' ');
-                          }),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          shareIconView(Assets.icBlackFacebookIcon, () {
-                            _launchURL(profileDetailModel
-                                ?.profile?.facebookHandle ??
-                                ' ');
-                          }),
-                        ],
-                      )
+                      Positioned(
+                          right: 15,
+                          top: 15,
+                          child: roleType == 'user'
+                              ? GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => EditPage(
+                                                  postMedia: profileDetailModel
+                                                          ?.profile
+                                                          ?.profilePicture ??
+                                                      '',
+                                                ))).then((value) {
+                                      getProfileDetails();
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(15),
+                                      border: Border.all(
+                                          color: AppColor.BUTTON_COLOR),
+                                    ),
+                                    child: Image.asset(
+                                      Assets.icEditProfile,
+                                      height: 35,
+                                      width: 35,
+                                    ),
+                                  ),
+                                )
+                              : SizedBox())
                     ],
                   ),
-                ),
-                Positioned(
-                    right: 15,
-                    top: 15,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    EditPage(
-                                      postMedia: profileDetailModel
-                                          ?.profile?.profilePicture ?? '',
-                                    ))).then((value) {
-                          getProfileDetails();
-                        });
-                      },
-                      child: Container(
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          border:
-                          Border.all(color: AppColor.BUTTON_COLOR),
-                        ),
-                        child: Image.asset(
-                          Assets.icEditProfile,
-                          height: 35,
-                          width: 35,
-                        ),
-                      ),
-                    ))
-              ],
-            ),
-            SizedBox(
-              height: 8,
-            ),
-            tabOptions(_names, logoOne),
-            SizedBox(
-              height: 8,
-            ),
-          ],
-        ),
-      )
+                  const SizedBox(
+                    height: 8,
+                  ),
+                  roleType == 'user'
+                      ? tabOptions(_names, userlogo)
+                      : tabOptions(agentProfileItemNames, agentlogo),
+                  const SizedBox(
+                    height: 8,
+                  ),
+                ],
+              ),
+            )
           : circularIndicator(context),
     );
   }
@@ -241,7 +324,7 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Container(
         height: 35,
         width: 35,
-        padding: EdgeInsets.all(6.0),
+        padding: const EdgeInsets.all(6.0),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10.0),
             color: AppColor.BACKGROUND_COLOR.withOpacity(0.5)),
@@ -254,60 +337,94 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void onItemSelection(BuildContext context, int index) {
+  void onUserItemSelection(BuildContext context, int index) {
     if (index == 0) {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => BudiAppBalance()));
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const BudiAppBalance()));
     } else if (index == 5) {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => NotificationPage()));
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const NotificationPage()));
     } else if (index == 6) {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => InviteFriends()));
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const InviteFriends()));
     } else if (index == 8) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => MyReviews()));
+          context, MaterialPageRoute(builder: (context) => const MyReviews()));
     } else if (index == 13) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => TermsOfService(title: 'Terms of service',pageType: 'terms',)));
+          context,
+          MaterialPageRoute(
+              builder: (context) => TermsOfService(
+                    title: 'Terms of service',
+                    pageType: 'terms',
+                  )));
     } else if (index == 14) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => Settings()));
+          context, MaterialPageRoute(builder: (context) => const Settings()));
     } else if (index == 15) {
       logOutPressed();
     }
   }
 
+  void onAgentItemSelection(BuildContext context, int index) {
+    if (index == 0) {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const CreateOferPage()));
+    } else if (index == 4) {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const NotificationPage()));
+    } else if (index == 5) {
+      // Navigator.push(context,
+      //     MaterialPageRoute(builder: (context) => const InviteFriends()));
+    } else if (index == 6) {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const ContactUs()));
+    } else if (index == 7) {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const Settings()));
+    } else if (index == 8) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => TermsOfService(
+                    title: 'Terms of service',
+                    pageType: 'terms',
+                  )));
+    }
+  }
+
   tabOptions(List<String> names, List<String> logo) {
     return Container(
-      decoration: BoxDecoration(
+      padding: roleType == 'user'
+          ? EdgeInsets.only(bottom: 0)
+          : EdgeInsets.only(bottom: 70),
+      decoration: const BoxDecoration(
         color: Colors.white,
       ),
       child: ListView.builder(
           shrinkWrap: true,
-          physics: BouncingScrollPhysics(),
+          physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.zero,
           itemCount: names.length,
           itemExtent: 60,
           itemBuilder: (context, index) {
             return InkWell(
               onTap: () {
-                onItemSelection(context, index);
+                roleType == 'user'
+                    ? onUserItemSelection(context, index)
+                    : onAgentItemSelection(context, index);
               },
               child: Column(
                 children: [
                   index == 4 || index == 10 || index == 13
                       ? Container(
-                    height: 5,
-                    width: MediaQuery
-                        .of(context)
-                        .size
-                        .width,
-                    color: AppColor.OFF_WHITE_COLOR,
-                  )
-                      : SizedBox(),
+                          height: 5,
+                          width: MediaQuery.of(context).size.width,
+                          color: AppColor.OFF_WHITE_COLOR,
+                        )
+                      : const SizedBox(),
                   Container(
-                      margin: EdgeInsets.only(left: 18, right: 15),
+                      margin: const EdgeInsets.only(left: 18, right: 15),
                       color: Colors.white,
                       height: 55,
                       child: Row(
@@ -321,7 +438,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 Container(
                                   height: 35,
                                   width: 35,
-                                  padding: EdgeInsets.all(6.0),
+                                  padding: const EdgeInsets.all(6.0),
                                   decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(10.0),
                                       color: AppColor.BACKGROUND_COLOR
@@ -332,7 +449,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     width: 25,
                                   ),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   width: 8,
                                 ),
                                 Text(
@@ -346,7 +463,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ],
                             ),
                           ),
-                          Icon(
+                          const Icon(
                             Icons.chevron_right,
                             color: AppColor.TEXT_COLOR,
                           ),
@@ -370,13 +487,12 @@ class _ProfilePageState extends State<ProfilePage> {
   logOutPressed() async {
     try {
       SharedPreferences sharedPreferences =
-      await SharedPreferences.getInstance();
+          await SharedPreferences.getInstance();
       var token = sharedPreferences.getString('LogInToken');
       var params = {"": ""};
       AppIndicator.loadingIndicator();
       final url = Uri.parse('http://74.208.150.111/api/logout');
-      var request = http.MultipartRequest('POST', url)
-        ..fields.addAll(params);
+      var request = http.MultipartRequest('POST', url)..fields.addAll(params);
       request.headers.addAll({
         'Authorization': 'Bearer ${token!}',
         'Accept': 'application/json',
@@ -402,5 +518,59 @@ class _ProfilePageState extends State<ProfilePage> {
       AppIndicator.disposeIndicator();
       print("Please Check Internet");
     }
+  }
+
+  boxView(String msg, String msg2, double fontSize) {
+    return Row(
+      children: [
+        Container(
+          width: 80,
+          height: 70,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: AppColor.OFF_WHITE_COLOR),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              getBoldText(
+                  msg: msg, fontSize: fontSize, color: AppColor.SIGNIN_COLOR),
+              getRegularStyleText(
+                msg: msg2,
+                fontSize: 14,
+                color: AppColor.SIGNIN_COLOR,
+              ),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+
+  messageAndDashboardButton() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        AppButton(
+          width: MediaQuery.of(context).size.width / 2.8,
+          height: 45,
+          color: Colors.white,
+          label: 'Dashboard',
+          lableColor: AppColor.BUTTON_COLOR,
+          onTap: () {},
+        ),
+        AppButton(
+          width: MediaQuery.of(context).size.width / 2.8,
+          height: 45,
+          color: Colors.white,
+          lableColor: AppColor.BUTTON_COLOR,
+          label: 'Messages',
+          onTap: () {
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => ChatList()));
+          },
+        )
+      ],
+    );
   }
 }

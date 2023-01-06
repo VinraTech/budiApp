@@ -4,6 +4,7 @@ import 'package:budi/Common%20Fields/AppButton.dart';
 import 'package:budi/Common%20Fields/AppTextField.dart';
 import 'package:budi/Helpers/AppIndicator.dart';
 import 'package:budi/Helpers/FileUploadPath.dart';
+import 'package:budi/Helpers/PickImage.dart';
 import 'package:budi/Helpers/ToastMessage.dart';
 import 'package:budi/Models/UserInfoModel.dart';
 import 'package:budi/Utilities/AppColor.dart';
@@ -42,21 +43,6 @@ class _EditPageState extends State<EditPage> {
     setState(() {});
   }
 
-  static Future<void> pickImage(ImageSource imageSource, BuildContext context,
-      ResponseHandler responseHandler) async {
-    try {
-      var picture =
-          await ImagePicker().pickImage(source: imageSource, imageQuality: 35);
-      if (picture != null) {
-        responseHandler(picture, true);
-      } else {
-        responseHandler(null, false);
-      }
-    } on PlatformException catch (e) {
-      responseHandler(null, false);
-    }
-  }
-
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.OFF_WHITE_COLOR,
@@ -77,7 +63,7 @@ class _EditPageState extends State<EditPage> {
                     child: getRegularStyleText(msg: 'Gallery'),
                     onTap: () {
                       galleryCameraTap = true;
-                      pickImage(ImageSource.gallery, context,
+                      UploadImage.pickImage(ImageSource.gallery, context,
                           (result, isSuccess) {
                         if (isSuccess) {
                           setState(() {
@@ -96,7 +82,7 @@ class _EditPageState extends State<EditPage> {
                     child: getRegularStyleText(msg: 'Camera'),
                     onTap: () {
                       galleryCameraTap = true;
-                      pickImage(ImageSource.camera, context,
+                      UploadImage.pickImage(ImageSource.camera, context,
                               (result, isSuccess) {
                             if (isSuccess) {
                               setState(() {

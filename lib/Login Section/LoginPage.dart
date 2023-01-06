@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:budi/BottomNavigationScreens/ProfilePage.dart';
 import 'package:budi/Helpers/ToastMessage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
@@ -161,10 +162,15 @@ class _LoginPageState extends State<LoginPage> {
         AppIndicator.disposeIndicator();
         userInfoModel = data;
         SharedPreferenceManager.getInstance.updateUserDetails(userInfoModel!);
-        Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-                builder: (context) => BottomNavigation(userInfoModel: userInfoModel,)),
-                (Route<dynamic> route) => false);
+        if(userInfoModel?.user?.roles?[0].name == 'agent'){
+          Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) =>
+              ProfilePage()), (Route<dynamic> route) => false);
+        }else{
+          Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                  builder: (context) => BottomNavigation(userInfoModel: userInfoModel,)),
+                  (Route<dynamic> route) => false);
+        }
         setState(() {});
       } else {
         ToastMessage.message(data.message);
